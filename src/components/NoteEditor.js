@@ -46,6 +46,9 @@ function NoteEditor({
       setLinkedNotes([]);
       setIsEditing(true);
     }
+    
+    // Clear hover state when note changes
+    setHoveredLinkTitle(null);
   }, [note, isCreatingNewNote]);
 
   // ===== AUTOCOMPLETE LOGIC =====
