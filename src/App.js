@@ -17,6 +17,7 @@ import Graph from './components/Graph';
 function App() {
   const [notes, setNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
+  const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list' or 'graph'
 
@@ -123,6 +124,7 @@ function App() {
         linkedNotes: linkedNotes
       });
       loadNotes();
+      setIsCreatingNewNote(false); // Reset after creating
     } catch (error) {
       console.error('Error creating note:', error);
     }
@@ -188,6 +190,10 @@ function App() {
                 notes={notes} 
                 selectedNote={selectedNote}
                 onSelectNote={setSelectedNote}
+                onCreateNewNote={() => {
+                  setSelectedNote(null);
+                  setIsCreatingNewNote(true);
+                }}
               />
             </div>
             <div className="editor">
@@ -209,6 +215,7 @@ function App() {
                   onCreate={createNote}
                   onDelete={deleteNote}
                   onSelectNote={setSelectedNote}
+                  isCreatingNewNote={isCreatingNewNote}
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
