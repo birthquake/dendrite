@@ -100,7 +100,7 @@ function App() {
         title: title,
         content: content,
         createdAt: new Date(),
-        linkedNotes: [] // NEW: Initialize empty linkedNotes array
+        linkedNotes: []
       });
       loadNotes();
     } catch (error) {
@@ -114,7 +114,7 @@ function App() {
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
         content: content,
-        linkedNotes: linkedNotes // NEW: Save linked notes
+        linkedNotes: linkedNotes
       });
       loadNotes();
       setSelectedNote(null);
@@ -171,22 +171,24 @@ function App() {
               {selectedNote ? (
                 <NoteEditor 
                   note={selectedNote}
-                  allNotes={notes} // NEW: Pass all notes for autocomplete
+                  allNotes={notes}
                   onSave={updateNote}
                   onDelete={deleteNote}
-                  getNoteByTitle={getNoteByTitle} // NEW: Pass helper
-                  getBacklinks={getBacklinks} // NEW: Pass helper
-                  createNoteIfNotExists={createNoteIfNotExists} // NEW: Pass helper
+                  onSelectNote={setSelectedNote}
+                  getNoteByTitle={getNoteByTitle}
+                  getBacklinks={getBacklinks}
+                  createNoteIfNotExists={createNoteIfNotExists}
                 />
               ) : (
                 <NoteEditor 
                   note={null}
-                  allNotes={notes} // NEW: Pass all notes for autocomplete
+                  allNotes={notes}
                   onCreate={createNote}
                   onDelete={deleteNote}
-                  getNoteByTitle={getNoteByTitle} // NEW: Pass helper
-                  getBacklinks={getBacklinks} // NEW: Pass helper
-                  createNoteIfNotExists={createNoteIfNotExists} // NEW: Pass helper
+                  onSelectNote={setSelectedNote}
+                  getNoteByTitle={getNoteByTitle}
+                  getBacklinks={getBacklinks}
+                  createNoteIfNotExists={createNoteIfNotExists}
                 />
               )}
             </div>
