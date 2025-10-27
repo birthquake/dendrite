@@ -19,9 +19,8 @@ function App() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('list'); // 'list' or 'graph'
+  const [view, setView] = useState('list');
 
-  // Initialize app and load notes
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -37,7 +36,6 @@ function App() {
     initApp();
   }, []);
 
-  // Load all notes from Firestore
   const loadNotes = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'notes'));
@@ -45,30 +43,35 @@ function App() {
         id: doc.id,
         ...doc.data()
       }));
+      console.log('Loaded notes from Firestore:', notesArray);
       setNotes(notesArray);
     } catch (error) {
       console.error('Error loading notes:', error);
     }
   };
 
-  // ===== HELPER FUNCTIONS FOR LINKING =====
-
-  // Find a note by exact title match
   const getNoteByTitle = (title) => {
     return notes.find(note => note.title.toLowerCase() === title.toLowerCase());
   };
 
-  // Get all backlinks (notes that link TO this note)
   const getBacklinks = (noteId) => {
     const targetNote = notes.find(n => n.id === noteId);
-    if (!targetNote) return [];
+    if (!targetNote) {
+      console.log('Target note not found for id:', noteId);
+      return [];
+    }
     
-    return notes.filter(note => 
+    console.log('Looking for backlinks to:', targetNote.title);
+    console.log('All notes:', notes.map(n => ({ id: n.id, title: n.title, linkedNotes: n.linkedNotes })));
+    
+    const backlinks = notes.filter(note => 
       note.linkedNotes && note.linkedNotes.includes(noteId)
     );
+    
+    console.log('Found backlinks:', backlinks.map(n => n.title));
+    return backlinks;
   };
 
-  // Create a note if it doesn't exist, return its ID
   const createNoteIfNotExists = async (title) => {
     const existingNote = getNoteByTitle(title);
     
@@ -76,15 +79,14 @@ function App() {
       return existingNote.id;
     }
     
-    // Note doesn't exist, create it
     try {
       const docRef = await addDoc(collection(db, 'notes'), {
         title: title,
-        content: '', // Empty content for auto-created notes
+        content: '',
         createdAt: new Date(),
         linkedNotes: []
       });
-      await loadNotes(); // Reload to get the new note
+      await loadNotes();
       return docRef.id;
     } catch (error) {
       console.error('Error creating note:', error);
@@ -92,7 +94,6 @@ function App() {
     }
   };
 
-  // Extract linked note IDs from content by parsing [[...]] syntax
   const extractLinkedNoteIds = (content) => {
     const linkRegex = /\[\[([^\]]+)\]\]/g;
     const linkedNoteIds = [];
@@ -101,20 +102,18 @@ function App() {
     while ((match = linkRegex.exec(content)) !== null) {
       const linkTitle = match[1];
       const linkedNote = getNoteByTitle(linkTitle);
+      console.log('Found link to:', linkTitle, '- Note exists?', !!linkedNote, 'ID:', linkedNote?.id);
       if (linkedNote && !linkedNoteIds.includes(linkedNote.id)) {
         linkedNoteIds.push(linkedNote.id);
       }
     }
 
+    console.log('Total linkedNoteIds extracted:', linkedNoteIds);
     return linkedNoteIds;
   };
 
-  // ===== END HELPER FUNCTIONS =====
-
-  // Create a new note
   const createNote = async (title, content) => {
     try {
-      // Extract linked notes from content
       const linkedNotes = extractLinkedNoteIds(content);
 
       await addDoc(collection(db, 'notes'), {
@@ -123,32 +122,38 @@ function App() {
         createdAt: new Date(),
         linkedNotes: linkedNotes
       });
-      loadNotes();
-      setIsCreatingNewNote(false); // Reset after creating
+      await loadNotes();
+      setIsCreatingNewNote(false);
     } catch (error) {
       console.error('Error creating note:', error);
     }
   };
 
-  // Update a note
   const updateNote = async (noteId, title, content, linkedNotes = []) => {
     try {
-      // Auto-extract linked notes from content to ensure they're always up to date
+      console.log('=== UPDATING NOTE ===');
+      console.log('Note ID:', noteId);
+      console.log('Title:', title);
+      console.log('Content:', content);
+      
       const extractedLinkedNotes = extractLinkedNoteIds(content);
+      console.log('Extracted linked notes:', extractedLinkedNotes);
 
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
         content: content,
         linkedNotes: extractedLinkedNotes
       });
-      loadNotes();
+      
+      console.log('Note saved to Firestore. Reloading...');
+      await loadNotes();
+      
       setSelectedNote(null);
     } catch (error) {
       console.error('Error updating note:', error);
     }
   };
 
-  // Delete a note
   const deleteNote = async (noteId) => {
     try {
       await deleteDoc(doc(db, 'notes', noteId));
