@@ -8,6 +8,7 @@ function NoteEditor({
   onSave, 
   onDelete,
   onSelectNote,
+  isCreatingNewNote = false,
   getNoteByTitle,
   getBacklinks,
   createNoteIfNotExists
@@ -34,13 +35,18 @@ function NoteEditor({
       setContent(note.content || '');
       setLinkedNotes(note.linkedNotes || []);
       setIsEditing(false);
+    } else if (isCreatingNewNote) {
+      setTitle('');
+      setContent('');
+      setLinkedNotes([]);
+      setIsEditing(true);
     } else {
       setTitle('');
       setContent('');
       setLinkedNotes([]);
       setIsEditing(true);
     }
-  }, [note]);
+  }, [note, isCreatingNewNote]);
 
   // ===== AUTOCOMPLETE LOGIC =====
 
@@ -264,7 +270,7 @@ function NoteEditor({
     }
   };
 
-  if (!note && !isEditing) {
+  if (!note && !isEditing && !isCreatingNewNote) {
     return <div className="editor-empty">Select a note or create a new one</div>;
   }
 
