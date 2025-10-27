@@ -1,6 +1,6 @@
 import './NoteList.css';
 
-function NoteList({ notes, selectedNote, onSelectNote }) {
+function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote }) {
   return (
     <div className="note-list">
       <h2>Your Notes</h2>
@@ -20,7 +20,7 @@ function NoteList({ notes, selectedNote, onSelectNote }) {
           ))
         )}
       </div>
-      <button className="new-note-btn" onClick={() => onSelectNote(null)}>
+      <button className="new-note-btn" onClick={onCreateNewNote}>
         + New Note
       </button>
     </div>
