@@ -91,16 +91,36 @@ function App() {
     }
   };
 
+  // Extract linked note IDs from content by parsing [[...]] syntax
+  const extractLinkedNoteIds = (content) => {
+    const linkRegex = /\[\[([^\]]+)\]\]/g;
+    const linkedNoteIds = [];
+    let match;
+
+    while ((match = linkRegex.exec(content)) !== null) {
+      const linkTitle = match[1];
+      const linkedNote = getNoteByTitle(linkTitle);
+      if (linkedNote && !linkedNoteIds.includes(linkedNote.id)) {
+        linkedNoteIds.push(linkedNote.id);
+      }
+    }
+
+    return linkedNoteIds;
+  };
+
   // ===== END HELPER FUNCTIONS =====
 
   // Create a new note
   const createNote = async (title, content) => {
     try {
+      // Extract linked notes from content
+      const linkedNotes = extractLinkedNoteIds(content);
+
       await addDoc(collection(db, 'notes'), {
         title: title,
         content: content,
         createdAt: new Date(),
-        linkedNotes: []
+        linkedNotes: linkedNotes
       });
       loadNotes();
     } catch (error) {
@@ -111,10 +131,13 @@ function App() {
   // Update a note
   const updateNote = async (noteId, title, content, linkedNotes = []) => {
     try {
+      // Auto-extract linked notes from content to ensure they're always up to date
+      const extractedLinkedNotes = extractLinkedNoteIds(content);
+
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
         content: content,
-        linkedNotes: linkedNotes
+        linkedNotes: extractedLinkedNotes
       });
       loadNotes();
       setSelectedNote(null);
