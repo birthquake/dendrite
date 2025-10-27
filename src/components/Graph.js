@@ -39,8 +39,7 @@ function Graph({ notes, onSelectNote }) {
     // Create SVG
     const svg = d3.select(svgRef.current)
       .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', [0, 0, width, height]);
+      .attr('height', height);
 
     // Create a group for transformations (zoom/pan)
     const g = svg.append('g');
@@ -171,28 +170,6 @@ function Graph({ notes, onSelectNote }) {
       });
 
     svg.call(zoom);
-
-    // Initial zoom to fit all nodes
-    const allNodes = node.nodes();
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    allNodes.forEach(nodeElem => {
-      const x = +d3.select(nodeElem).attr('cx');
-      const y = +d3.select(nodeElem).attr('cy');
-      x0 = Math.min(x0, x - 30);
-      x1 = Math.max(x1, x + 30);
-      y0 = Math.min(y0, y - 30);
-      y1 = Math.max(y1, y + 30);
-    });
-
-    const scale = 0.8 / Math.max((x1 - x0) / width, (y1 - y0) / height);
-    const translate = [(width - scale * (x0 + x1)) / 2, (height - scale * (y0 + y1)) / 2];
-
-    svg.transition()
-      .duration(750)
-      .call(
-        zoom.transform,
-        d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
-      );
 
     // Drag function
     function drag(simulation) {
