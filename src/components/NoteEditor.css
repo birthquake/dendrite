@@ -1,0 +1,143 @@
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.editor-title {
+  font-size: 32px;
+  font-weight: bold;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  outline: none;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.editor-title:focus {
+  border-bottom-color: #6366f1;
+}
+
+.editor-title::placeholder {
+  color: #666;
+}
+
+.editor-content {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+}
+
+.editor-content::placeholder {
+  color: #666;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.save-btn,
+.cancel-btn,
+.edit-btn,
+.delete-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.save-btn {
+  background: #6366f1;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.cancel-btn {
+  background: #374151;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #4b5563;
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.note-header h1 {
+  font-size: 32px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.note-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-btn {
+  background: #6366f1;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+.note-content {
+  flex: 1;
+  color: #e5e7eb;
+  line-height: 1.8;
+  font-size: 16px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+}
+
+.editor-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 18px;
+}
