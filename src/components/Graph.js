@@ -19,7 +19,6 @@ function Graph({ notes, onSelectNote }) {
     notes.forEach(note => {
       if (note.linkedNotes && note.linkedNotes.length > 0) {
         note.linkedNotes.forEach(linkedNoteId => {
-          // Only add link if both notes exist
           if (nodes.find(n => n.id === linkedNoteId)) {
             links.push({
               source: note.id,
@@ -40,16 +39,20 @@ function Graph({ notes, onSelectNote }) {
     // Create SVG
     const svg = d3.select(svgRef.current)
       .attr('width', width)
-      .attr('height', height);
+      .attr('height', height)
+      .attr('viewBox', [0, 0, width, height]);
+
+    // Create a group for transformations (zoom/pan)
+    const g = svg.append('g');
 
     // Create force simulation
     const simulation = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links)
         .id(d => d.id)
-        .distance(120))
-      .force('charge', d3.forceManyBody().strength(-400))
+        .distance(150))
+      .force('charge', d3.forceManyBody().strength(-500))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(40));
+      .force('collision', d3.forceCollide().radius(50));
 
     // Create arrow markers for directed links
     const defs = svg.append('defs');
@@ -65,7 +68,7 @@ function Graph({ notes, onSelectNote }) {
       .attr('fill', '#6366f1');
 
     // Create link lines with arrows
-    const link = svg.append('g')
+    const link = g.append('g')
       .selectAll('line')
       .data(links)
       .enter()
@@ -76,7 +79,7 @@ function Graph({ notes, onSelectNote }) {
       .attr('marker-end', 'url(#arrowhead)');
 
     // Create nodes
-    const node = svg.append('g')
+    const node = g.append('g')
       .selectAll('circle')
       .data(nodes)
       .enter()
@@ -85,15 +88,27 @@ function Graph({ notes, onSelectNote }) {
       .attr('fill', '#6366f1')
       .attr('opacity', 0.8)
       .on('click', (event, d) => {
+        console.log('🔵 Node clicked:', d);
+        console.log('Looking for note with id:', d.id);
+        console.log('Available notes:', notes.map(n => ({ id: n.id, title: n.title })));
+        
         if (onSelectNote) {
           const noteToSelect = notes.find(n => n.id === d.id);
-          onSelectNote(noteToSelect);
+          console.log('Note to select:', noteToSelect);
+          if (noteToSelect) {
+            onSelectNote(noteToSelect);
+            console.log('✅ Selected note:', noteToSelect.title);
+          } else {
+            console.log('❌ Note not found in notes array');
+          }
+        } else {
+          console.log('❌ onSelectNote callback not provided');
         }
       })
       .call(drag(simulation));
 
     // Add labels
-    const labels = svg.append('g')
+    const labels = g.append('g')
       .selectAll('text')
       .data(nodes)
       .enter()
@@ -129,12 +144,10 @@ function Graph({ notes, onSelectNote }) {
         .attr('r', 30)
         .attr('fill', '#a78bfa');
       
-      // Highlight connected links
       link.style('opacity', link_d => 
         link_d.source.id === d.id || link_d.target.id === d.id ? 1 : 0.2
       );
       
-      // Highlight connected labels
       labels.style('opacity', node_d => 
         node_d.id === d.id || 
         links.some(l => (l.source.id === d.id && l.target.id === node_d.id) || 
@@ -150,6 +163,36 @@ function Graph({ notes, onSelectNote }) {
       link.style('opacity', 0.6);
       labels.style('opacity', 1);
     });
+
+    // Add zoom behavior
+    const zoom = d3.zoom()
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    svg.call(zoom);
+
+    // Initial zoom to fit all nodes
+    const allNodes = node.nodes();
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    allNodes.forEach(nodeElem => {
+      const x = +d3.select(nodeElem).attr('cx');
+      const y = +d3.select(nodeElem).attr('cy');
+      x0 = Math.min(x0, x - 30);
+      x1 = Math.max(x1, x + 30);
+      y0 = Math.min(y0, y - 30);
+      y1 = Math.max(y1, y + 30);
+    });
+
+    const scale = 0.8 / Math.max((x1 - x0) / width, (y1 - y0) / height);
+    const translate = [(width - scale * (x0 + x1)) / 2, (height - scale * (y0 + y1)) / 2];
+
+    svg.transition()
+      .duration(750)
+      .call(
+        zoom.transform,
+        d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+      );
 
     // Drag function
     function drag(simulation) {
