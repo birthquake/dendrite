@@ -206,6 +206,41 @@ function NoteEditor({
 
   // ===== END LINK PARSING =====
 
+  // ===== BACKLINKS SECTION =====
+
+  // Get and render backlinks
+  const renderBacklinks = () => {
+    if (!note) return null;
+
+    const backlinks = getBacklinks(note.id);
+
+    if (backlinks.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="backlinks-section">
+        <h3>Linked from {backlinks.length} note{backlinks.length !== 1 ? 's' : ''}</h3>
+        <div className="backlinks-container">
+          {backlinks.map(backlink => (
+            <div
+              key={backlink.id}
+              className="backlink-item"
+              onClick={() => onSelectNote(backlink)}
+            >
+              <div className="backlink-title">{backlink.title}</div>
+              <div className="backlink-preview">
+                {backlink.content?.substring(0, 60)}...
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ===== END BACKLINKS SECTION =====
+
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
       alert('Please fill in both title and content');
@@ -308,6 +343,9 @@ function NoteEditor({
           <div className="note-content">
             {renderContentWithLinks()}
           </div>
+
+          {/* BACKLINKS SECTION */}
+          {renderBacklinks()}
 
           {/* HOVER PREVIEW TOOLTIP */}
           {hoveredLinkTitle && (
