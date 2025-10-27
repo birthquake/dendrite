@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD6xREwV56xcP5LNWPNgxB0Bi2FSb9SWyk",
+  authDomain: "dendrite-b860e.firebaseapp.com",
+  projectId: "dendrite-b860e",
+  storageBucket: "dendrite-b860e.firebasestorage.app",
+  messagingSenderId: "1075197492679",
+  appId: "1:1075197492679:web:22caca376a834592192de2"
 };
 
 const app = initializeApp(firebaseConfig);
