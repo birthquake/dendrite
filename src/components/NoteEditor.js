@@ -7,6 +7,7 @@ function NoteEditor({
   onCreate, 
   onSave, 
   onDelete,
+  onSelectNote,
   getNoteByTitle,
   getBacklinks,
   createNoteIfNotExists
@@ -22,6 +23,10 @@ function NoteEditor({
   const [searchTerm, setSearchTerm] = useState('');
   const [cursorPos, setCursorPos] = useState(0);
   const textareaRef = useRef(null);
+
+  // Hover preview state
+  const [hoveredLinkTitle, setHoveredLinkTitle] = useState(null);
+  const [hoverPreviewPos, setHoverPreviewPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (note) {
@@ -127,6 +132,80 @@ function NoteEditor({
 
   // ===== END AUTOCOMPLETE LOGIC =====
 
+  // ===== LINK PARSING AND RENDERING =====
+
+  // Parse content and convert [[Note Title]] to clickable links
+  const renderContentWithLinks = () => {
+    const linkRegex = /\[\[([^\]]+)\]\]/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(content)) !== null) {
+      // Add text before the link
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: content.substring(lastIndex, match.index)
+        });
+      }
+
+      // Add the link
+      const linkTitle = match[1];
+      const linkedNote = getNoteByTitle(linkTitle);
+
+      parts.push({
+        type: 'link',
+        title: linkTitle,
+        noteExists: !!linkedNote,
+        noteId: linkedNote?.id,
+        notePreview: linkedNote?.content || ''
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push({
+        type: 'text',
+        content: content.substring(lastIndex)
+      });
+    }
+
+    // Convert parts to JSX
+    return parts.map((part, idx) => {
+      if (part.type === 'text') {
+        return <span key={idx}>{part.content}</span>;
+      } else if (part.type === 'link') {
+        return (
+          <span
+            key={idx}
+            className={`note-link ${!part.noteExists ? 'broken-link' : ''}`}
+            onClick={() => {
+              if (part.noteExists && onSelectNote) {
+                const noteToSelect = allNotes.find(n => n.id === part.noteId);
+                onSelectNote(noteToSelect);
+              }
+            }}
+            onMouseEnter={(e) => {
+              setHoveredLinkTitle(part.title);
+              setHoverPreviewPos({
+                x: e.clientX,
+                y: e.clientY
+              });
+            }}
+            onMouseLeave={() => setHoveredLinkTitle(null)}
+          >
+            {part.title}
+          </span>
+        );
+      }
+    });
+  };
+
+  // ===== END LINK PARSING =====
+
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
       alert('Please fill in both title and content');
@@ -175,7 +254,6 @@ function NoteEditor({
               onChange={handleContentChange}
             />
             
-            {/* AUTOCOMPLETE DROPDOWN */}
             {showAutocomplete && (
               <div className="autocomplete-dropdown">
                 {autocompleteResults.length > 0 ? (
@@ -228,8 +306,24 @@ function NoteEditor({
             </div>
           </div>
           <div className="note-content">
-            {content}
+            {renderContentWithLinks()}
           </div>
+
+          {/* HOVER PREVIEW TOOLTIP */}
+          {hoveredLinkTitle && (
+            <div 
+              className="link-preview-tooltip"
+              style={{
+                left: `${hoverPreviewPos.x}px`,
+                top: `${hoverPreviewPos.y + 20}px`
+              }}
+            >
+              <div className="tooltip-title">{hoveredLinkTitle}</div>
+              <div className="tooltip-preview">
+                {getNoteByTitle(hoveredLinkTitle)?.content?.substring(0, 100)}...
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
