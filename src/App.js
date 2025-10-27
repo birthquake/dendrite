@@ -50,6 +50,49 @@ function App() {
     }
   };
 
+  // ===== HELPER FUNCTIONS FOR LINKING =====
+
+  // Find a note by exact title match
+  const getNoteByTitle = (title) => {
+    return notes.find(note => note.title.toLowerCase() === title.toLowerCase());
+  };
+
+  // Get all backlinks (notes that link TO this note)
+  const getBacklinks = (noteId) => {
+    const targetNote = notes.find(n => n.id === noteId);
+    if (!targetNote) return [];
+    
+    return notes.filter(note => 
+      note.linkedNotes && note.linkedNotes.includes(noteId)
+    );
+  };
+
+  // Create a note if it doesn't exist, return its ID
+  const createNoteIfNotExists = async (title) => {
+    const existingNote = getNoteByTitle(title);
+    
+    if (existingNote) {
+      return existingNote.id;
+    }
+    
+    // Note doesn't exist, create it
+    try {
+      const docRef = await addDoc(collection(db, 'notes'), {
+        title: title,
+        content: '', // Empty content for auto-created notes
+        createdAt: new Date(),
+        linkedNotes: []
+      });
+      await loadNotes(); // Reload to get the new note
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating note:', error);
+      return null;
+    }
+  };
+
+  // ===== END HELPER FUNCTIONS =====
+
   // Create a new note
   const createNote = async (title, content) => {
     try {
@@ -57,7 +100,7 @@ function App() {
         title: title,
         content: content,
         createdAt: new Date(),
-        linkedNotes: []
+        linkedNotes: [] // NEW: Initialize empty linkedNotes array
       });
       loadNotes();
     } catch (error) {
@@ -66,11 +109,12 @@ function App() {
   };
 
   // Update a note
-  const updateNote = async (noteId, title, content) => {
+  const updateNote = async (noteId, title, content, linkedNotes = []) => {
     try {
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
-        content: content
+        content: content,
+        linkedNotes: linkedNotes // NEW: Save linked notes
       });
       loadNotes();
       setSelectedNote(null);
@@ -113,7 +157,6 @@ function App() {
           </button>
         </div>
       </header>
-
       <div className="main-container">
         {view === 'list' ? (
           <>
@@ -128,14 +171,22 @@ function App() {
               {selectedNote ? (
                 <NoteEditor 
                   note={selectedNote}
+                  allNotes={notes} // NEW: Pass all notes for autocomplete
                   onSave={updateNote}
                   onDelete={deleteNote}
+                  getNoteByTitle={getNoteByTitle} // NEW: Pass helper
+                  getBacklinks={getBacklinks} // NEW: Pass helper
+                  createNoteIfNotExists={createNoteIfNotExists} // NEW: Pass helper
                 />
               ) : (
                 <NoteEditor 
                   note={null}
+                  allNotes={notes} // NEW: Pass all notes for autocomplete
                   onCreate={createNote}
                   onDelete={deleteNote}
+                  getNoteByTitle={getNoteByTitle} // NEW: Pass helper
+                  getBacklinks={getBacklinks} // NEW: Pass helper
+                  createNoteIfNotExists={createNoteIfNotExists} // NEW: Pass helper
                 />
               )}
             </div>
