@@ -1,25 +1,69 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: #0f0f0f;
+  color: #e5e7eb;
+}
+
 .App {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #0f0f0f;
-  color: #ffffff;
+  background-color: #0f0f0f;
 }
 
+/* LOADING STATE */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #0f0f0f;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #2d2d2d;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  color: #9ca3af;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-bottom: 1px solid #3a3a3a;
+  padding: 16px 24px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #2d2d2d;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .header h1 {
-  margin: 0;
-  font-size: 28px;
-  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -27,34 +71,34 @@
 
 .view-toggle {
   display: flex;
-  gap: 10px;
-  background: #1a1a1a;
-  padding: 6px;
-  border-radius: 8px;
+  gap: 8px;
+  background-color: #2d2d2d;
+  padding: 4px;
+  border-radius: 6px;
 }
 
 .view-toggle button {
   padding: 8px 16px;
-  background: transparent;
-  color: #999;
+  background-color: transparent;
+  color: #9ca3af;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
+  font-size: 14px;
 }
 
 .view-toggle button:hover {
-  color: #ffffff;
-  background: #2d2d2d;
+  color: #e5e7eb;
 }
 
 .view-toggle button.active {
-  background: #6366f1;
+  background-color: #6366f1;
   color: white;
 }
 
+/* MAIN CONTAINER */
 .main-container {
   display: flex;
   flex: 1;
@@ -63,31 +107,31 @@
 
 .sidebar {
   width: 300px;
-  overflow: hidden;
   border-right: 1px solid #2d2d2d;
+  overflow-y: auto;
+  background-color: #1a1a1a;
 }
 
 .editor {
   flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  background-color: #0f0f0f;
 }
 
-.loading {
+.editor-empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  font-size: 18px;
-  color: #999;
-  background: #0f0f0f;
+  height: 100%;
+  color: #6b7280;
+  font-size: 16px;
+  text-align: center;
+  padding: 40px;
 }
 
-/* Scrollbar styling */
+/* SCROLLBARS */
 ::-webkit-scrollbar {
   width: 8px;
-  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -95,14 +139,47 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3a3a3a;
+  background-color: #2d2d2d;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4a4a;
+  background-color: #3d3d3d;
 }
 
+/* TOAST NOTIFICATIONS CUSTOMIZATION */
+.Toastify__toast-container {
+  z-index: 999;
+}
+
+.Toastify__toast {
+  border-radius: 6px;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.Toastify__toast--success {
+  background-color: #10b981;
+}
+
+.Toastify__toast--error {
+  background-color: #ef4444;
+}
+
+.Toastify__toast--info {
+  background-color: #3b82f6;
+}
+
+.Toastify__toast-body {
+  color: white;
+  font-weight: 500;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .main-container {
     flex-direction: column;
@@ -110,9 +187,18 @@
 
   .sidebar {
     width: 100%;
-    height: 200px;
     border-right: none;
     border-bottom: 1px solid #2d2d2d;
+    max-height: 40vh;
+  }
+
+  .editor {
+    flex: 1;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
   }
 
   .header h1 {
