@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import './NoteEditor.css';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 function NoteEditor({ 
   note, 
@@ -22,6 +24,8 @@ function NoteEditor({
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [tagSuggestions, setTagSuggestions] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   // Autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -60,6 +64,40 @@ function NoteEditor({
     setShowTagSuggestions(false);
   }, [note, isCreatingNewNote]);
 
+  // Listen for keyboard shortcuts
+  useEffect(() => {
+    const handleSaveShortcut = (e) => {
+      if (isEditing && (e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    const handleCancelShortcut = (e) => {
+      if (e.key === 'Escape' && isEditing) {
+        if (note) {
+          setIsEditing(false);
+        }
+      }
+    };
+
+    const handleCustomSave = () => {
+      if (isEditing) {
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleSaveShortcut);
+    window.addEventListener('keydown', handleCancelShortcut);
+    window.addEventListener('save-note', handleCustomSave);
+
+    return () => {
+      window.removeEventListener('keydown', handleSaveShortcut);
+      window.removeEventListener('keydown', handleCancelShortcut);
+      window.removeEventListener('save-note', handleCustomSave);
+    };
+  }, [isEditing, note, title, content, tags]);
+
   // ===== TAG LOGIC =====
 
   const handleTagInput = (e) => {
@@ -67,7 +105,6 @@ function NoteEditor({
     setTagInput(value);
 
     if (value.trim()) {
-      // Filter suggestions
       const filtered = allTags.filter(tag =>
         tag.toLowerCase().includes(value.toLowerCase()) && !tags.includes(tag)
       );
@@ -283,27 +320,51 @@ function NoteEditor({
 
   // ===== END BACKLINKS SECTION =====
 
-  const handleSave = () => {
-    if (!title.trim() || !content.trim()) {
-      alert('Please fill in both title and content');
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast.error('Note title cannot be empty');
       return;
     }
 
-    if (note) {
-      onSave(note.id, title, content, linkedNotes, tags);
-    } else {
-      onCreate(title, content, tags);
-      setTitle('');
-      setContent('');
-      setLinkedNotes([]);
-      setTags([]);
+    if (!content.trim()) {
+      toast.error('Note content cannot be empty');
+      return;
     }
-    setIsEditing(false);
+
+    setIsSaving(true);
+
+    try {
+      if (note) {
+        await onSave(note.id, title, content, linkedNotes, tags);
+      } else {
+        await onCreate(title, content, tags);
+        setTitle('');
+        setContent('');
+        setLinkedNotes([]);
+        setTags([]);
+      }
+      setIsEditing(false);
+    } catch (error) {
+      toast.error('Failed to save note');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      onDelete(note.id);
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
+    setIsSaving(true);
+
+    try {
+      await onDelete(note.id);
+    } catch (error) {
+      toast.error('Failed to delete note');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -313,6 +374,14 @@ function NoteEditor({
 
   return (
     <div className="note-editor">
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          noteTitle={title}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
+
       {isEditing ? (
         <>
           <input
@@ -322,6 +391,7 @@ function NoteEditor({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
+            disabled={isSaving}
           />
 
           {/* TAG INPUT */}
@@ -333,6 +403,7 @@ function NoteEditor({
                   <button
                     className="tag-remove"
                     onClick={() => removeTag(tag)}
+                    disabled={isSaving}
                   >
                     ✕
                   </button>
@@ -347,6 +418,7 @@ function NoteEditor({
                 value={tagInput}
                 onChange={handleTagInput}
                 onKeyDown={handleTagKeyDown}
+                disabled={isSaving}
               />
               {showTagSuggestions && tagSuggestions.length > 0 && (
                 <div className="tag-suggestions">
@@ -371,6 +443,7 @@ function NoteEditor({
               placeholder="Start writing... Type [[ to link notes"
               value={content}
               onChange={handleContentChange}
+              disabled={isSaving}
             />
             
             {showAutocomplete && (
@@ -401,12 +474,20 @@ function NoteEditor({
           </div>
 
           <div className="editor-actions">
-            <button className="save-btn" onClick={handleSave}>
-              Save
+            <button 
+              className="save-btn" 
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save (Ctrl+S)'}
             </button>
             {note && (
-              <button className="cancel-btn" onClick={() => setIsEditing(false)}>
-                Cancel
+              <button 
+                className="cancel-btn" 
+                onClick={() => setIsEditing(false)}
+                disabled={isSaving}
+              >
+                Cancel (Esc)
               </button>
             )}
           </div>
@@ -416,10 +497,18 @@ function NoteEditor({
           <div className="note-header">
             <h1>{title}</h1>
             <div className="note-actions">
-              <button className="edit-btn" onClick={() => setIsEditing(true)}>
+              <button 
+                className="edit-btn" 
+                onClick={() => setIsEditing(true)}
+                disabled={isSaving}
+              >
                 Edit
               </button>
-              <button className="delete-btn" onClick={handleDelete}>
+              <button 
+                className="delete-btn" 
+                onClick={handleDeleteClick}
+                disabled={isSaving}
+              >
                 Delete
               </button>
             </div>
