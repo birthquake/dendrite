@@ -1,21 +1,40 @@
 import { useState } from 'react';
 import './NoteList.css';
 
-function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote }) {
+function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
 
-  // Filter notes based on search term
+  // Filter notes based on search term AND selected tags
   const filteredNotes = notes.filter(note => {
     const title = note.title?.toLowerCase() || '';
     const content = note.content?.toLowerCase() || '';
     const search = searchTerm.toLowerCase();
     
-    return title.includes(search) || content.includes(search);
+    // Check search term match
+    const matchesSearch = title.includes(search) || content.includes(search);
+    
+    // Check tag match (if tags are selected, note must have at least one selected tag)
+    const matchesTags = selectedTags.length === 0 || 
+      (note.tags && note.tags.some(tag => selectedTags.includes(tag)));
+    
+    return matchesSearch && matchesTags;
   });
 
-  // Clear search
   const clearSearch = () => {
     setSearchTerm('');
+  };
+
+  const toggleTagFilter = (tag) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const clearTagFilters = () => {
+    setSelectedTags([]);
   };
 
   return (
@@ -45,10 +64,37 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote }) {
         </div>
       )}
 
+      {/* TAG FILTER */}
+      {allTags.length > 0 && (
+        <div className="tag-filter-container">
+          <div className="tag-filter-header">
+            <span className="tag-filter-label">Filter by tag</span>
+            {selectedTags.length > 0 && (
+              <button className="tag-filter-clear" onClick={clearTagFilters}>
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="tag-filter-list">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                className={`tag-filter-item ${selectedTags.includes(tag) ? 'active' : ''}`}
+                onClick={() => toggleTagFilter(tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="notes-container">
         {filteredNotes.length === 0 ? (
           <p className="empty-state">
-            {searchTerm ? 'No notes match your search.' : 'No notes yet. Create one to get started!'}
+            {searchTerm || selectedTags.length > 0
+              ? 'No notes match your filters.'
+              : 'No notes yet. Create one to get started!'}
           </p>
         ) : (
           filteredNotes.map(note => (
@@ -59,6 +105,13 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote }) {
             >
               <h3>{note.title || 'Untitled'}</h3>
               <p>{note.content?.substring(0, 50)}...</p>
+              {note.tags && note.tags.length > 0 && (
+                <div className="note-tags">
+                  {note.tags.map(tag => (
+                    <span key={tag} className="note-tag-small">{tag}</span>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         )}
