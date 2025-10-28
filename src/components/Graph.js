@@ -44,14 +44,16 @@ function Graph({ notes, onSelectNote }) {
     // Create a group for transformations (zoom/pan)
     const g = svg.append('g');
 
-    // Create force simulation
+    // Create force simulation with better constraints
     const simulation = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links)
         .id(d => d.id)
-        .distance(150))
-      .force('charge', d3.forceManyBody().strength(-500))
+        .distance(80))
+      .force('charge', d3.forceManyBody().strength(-200))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(50));
+      .force('collision', d3.forceCollide().radius(30))
+      .force('x', d3.forceX(width / 2).strength(0.1))
+      .force('y', d3.forceY(height / 2).strength(0.1));
 
     // Create arrow markers for directed links
     const defs = svg.append('defs');
@@ -87,21 +89,11 @@ function Graph({ notes, onSelectNote }) {
       .attr('fill', '#6366f1')
       .attr('opacity', 0.8)
       .on('click', (event, d) => {
-        console.log('🔵 Node clicked:', d);
-        console.log('Looking for note with id:', d.id);
-        console.log('Available notes:', notes.map(n => ({ id: n.id, title: n.title })));
-        
         if (onSelectNote) {
           const noteToSelect = notes.find(n => n.id === d.id);
-          console.log('Note to select:', noteToSelect);
           if (noteToSelect) {
             onSelectNote(noteToSelect);
-            console.log('✅ Selected note:', noteToSelect.title);
-          } else {
-            console.log('❌ Note not found in notes array');
           }
-        } else {
-          console.log('❌ onSelectNote callback not provided');
         }
       })
       .call(drag(simulation));
@@ -123,14 +115,20 @@ function Graph({ notes, onSelectNote }) {
     // Update positions on simulation tick
     simulation.on('tick', () => {
       link
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
+        .attr('x1', d => Math.max(0, Math.min(width, d.source.x)))
+        .attr('y1', d => Math.max(0, Math.min(height, d.source.y)))
+        .attr('x2', d => Math.max(0, Math.min(width, d.target.x)))
+        .attr('y2', d => Math.max(0, Math.min(height, d.target.y)));
 
       node
-        .attr('cx', d => d.x)
-        .attr('cy', d => d.y);
+        .attr('cx', d => {
+          d.x = Math.max(30, Math.min(width - 30, d.x));
+          return d.x;
+        })
+        .attr('cy', d => {
+          d.y = Math.max(30, Math.min(height - 30, d.y));
+          return d.y;
+        });
 
       labels
         .attr('x', d => d.x)
