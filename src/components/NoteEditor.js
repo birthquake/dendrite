@@ -11,12 +11,17 @@ function NoteEditor({
   isCreatingNewNote = false,
   getNoteByTitle,
   getBacklinks,
-  createNoteIfNotExists
+  createNoteIfNotExists,
+  allTags = []
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(!note);
   const [linkedNotes, setLinkedNotes] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [tagSuggestions, setTagSuggestions] = useState([]);
   
   // Autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -34,41 +39,83 @@ function NoteEditor({
       setTitle(note.title || '');
       setContent(note.content || '');
       setLinkedNotes(note.linkedNotes || []);
+      setTags(note.tags || []);
       setIsEditing(false);
     } else if (isCreatingNewNote) {
       setTitle('');
       setContent('');
       setLinkedNotes([]);
+      setTags([]);
       setIsEditing(true);
     } else {
       setTitle('');
       setContent('');
       setLinkedNotes([]);
+      setTags([]);
       setIsEditing(true);
     }
     
-    // Clear hover state when note changes
     setHoveredLinkTitle(null);
+    setTagInput('');
+    setShowTagSuggestions(false);
   }, [note, isCreatingNewNote]);
+
+  // ===== TAG LOGIC =====
+
+  const handleTagInput = (e) => {
+    const value = e.target.value;
+    setTagInput(value);
+
+    if (value.trim()) {
+      // Filter suggestions
+      const filtered = allTags.filter(tag =>
+        tag.toLowerCase().includes(value.toLowerCase()) && !tags.includes(tag)
+      );
+      setTagSuggestions(filtered);
+      setShowTagSuggestions(true);
+    } else {
+      setShowTagSuggestions(false);
+    }
+  };
+
+  const addTag = (tagName) => {
+    const trimmedTag = tagName.trim().toLowerCase();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+    }
+    setTagInput('');
+    setShowTagSuggestions(false);
+  };
+
+  const removeTag = (tagToRemove) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
+  };
+
+  // ===== END TAG LOGIC =====
 
   // ===== AUTOCOMPLETE LOGIC =====
 
-  // Detect if user is typing [[ and show autocomplete
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setContent(newContent);
     setCursorPos(e.target.selectionStart);
 
-    // Look for [[ pattern before cursor
     const textBeforeCursor = newContent.substring(0, e.target.selectionStart);
     const lastBracketIndex = textBeforeCursor.lastIndexOf('[[');
     
     if (lastBracketIndex !== -1) {
-      // Check if there's a closing ]] after cursor
       const textAfterLastBracket = textBeforeCursor.substring(lastBracketIndex + 2);
       
       if (!textAfterLastBracket.includes(']]')) {
-        // User is actively typing a link
         setSearchTerm(textAfterLastBracket);
         filterNotesForAutocomplete(textAfterLastBracket);
         setShowAutocomplete(true);
@@ -80,7 +127,6 @@ function NoteEditor({
     }
   };
 
-  // Filter notes based on search term
   const filterNotesForAutocomplete = (search) => {
     if (!search.trim()) {
       setAutocompleteResults(allNotes);
@@ -93,35 +139,29 @@ function NoteEditor({
     setAutocompleteResults(filtered);
   };
 
-  // Insert link into content
   const insertLink = async (noteTitleToLink) => {
     if (!textareaRef.current) return;
 
-    // Find the [[ in the content
     const textBeforeCursor = content.substring(0, cursorPos);
     const lastBracketIndex = textBeforeCursor.lastIndexOf('[[');
 
     if (lastBracketIndex === -1) return;
 
-    // Check if note exists, if not create it
     let linkNoteId = null;
     const existingNote = getNoteByTitle(noteTitleToLink);
     
     if (existingNote) {
       linkNoteId = existingNote.id;
     } else {
-      // Create the note if it doesn't exist
       linkNoteId = await createNoteIfNotExists(noteTitleToLink);
     }
 
-    // Replace [[ search term ]] with [[ note title ]]
     const beforeLink = content.substring(0, lastBracketIndex);
     const afterLink = content.substring(cursorPos);
     const newContent = beforeLink + '[[' + noteTitleToLink + ']]' + afterLink;
 
     setContent(newContent);
 
-    // Add to linkedNotes if not already there
     if (linkNoteId && !linkedNotes.includes(linkNoteId)) {
       setLinkedNotes([...linkedNotes, linkNoteId]);
     }
@@ -129,7 +169,6 @@ function NoteEditor({
     setShowAutocomplete(false);
     setSearchTerm('');
 
-    // Focus back on textarea
     setTimeout(() => {
       if (textareaRef.current) {
         const newCursorPos = beforeLink.length + 2 + noteTitleToLink.length + 2;
@@ -143,7 +182,6 @@ function NoteEditor({
 
   // ===== LINK PARSING AND RENDERING =====
 
-  // Parse content and convert [[Note Title]] to clickable links
   const renderContentWithLinks = () => {
     const linkRegex = /\[\[([^\]]+)\]\]/g;
     const parts = [];
@@ -151,7 +189,6 @@ function NoteEditor({
     let match;
 
     while ((match = linkRegex.exec(content)) !== null) {
-      // Add text before the link
       if (match.index > lastIndex) {
         parts.push({
           type: 'text',
@@ -159,7 +196,6 @@ function NoteEditor({
         });
       }
 
-      // Add the link
       const linkTitle = match[1];
       const linkedNote = getNoteByTitle(linkTitle);
 
@@ -174,7 +210,6 @@ function NoteEditor({
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text
     if (lastIndex < content.length) {
       parts.push({
         type: 'text',
@@ -182,7 +217,6 @@ function NoteEditor({
       });
     }
 
-    // Convert parts to JSX
     return parts.map((part, idx) => {
       if (part.type === 'text') {
         return <span key={idx}>{part.content}</span>;
@@ -217,7 +251,6 @@ function NoteEditor({
 
   // ===== BACKLINKS SECTION =====
 
-  // Get and render backlinks
   const renderBacklinks = () => {
     if (!note) return null;
 
@@ -257,12 +290,13 @@ function NoteEditor({
     }
 
     if (note) {
-      onSave(note.id, title, content, linkedNotes);
+      onSave(note.id, title, content, linkedNotes, tags);
     } else {
-      onCreate(title, content);
+      onCreate(title, content, tags);
       setTitle('');
       setContent('');
       setLinkedNotes([]);
+      setTags([]);
     }
     setIsEditing(false);
   };
@@ -289,6 +323,47 @@ function NoteEditor({
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
           />
+
+          {/* TAG INPUT */}
+          <div className="tag-input-container">
+            <div className="tags-display">
+              {tags.map(tag => (
+                <div key={tag} className="tag-chip">
+                  {tag}
+                  <button
+                    className="tag-remove"
+                    onClick={() => removeTag(tag)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="tag-input-wrapper">
+              <input
+                type="text"
+                className="tag-input"
+                placeholder="Add tags..."
+                value={tagInput}
+                onChange={handleTagInput}
+                onKeyDown={handleTagKeyDown}
+              />
+              {showTagSuggestions && tagSuggestions.length > 0 && (
+                <div className="tag-suggestions">
+                  {tagSuggestions.map(tag => (
+                    <div
+                      key={tag}
+                      className="tag-suggestion-item"
+                      onClick={() => addTag(tag)}
+                    >
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="editor-textarea-wrapper">
             <textarea
               ref={textareaRef}
@@ -349,14 +424,22 @@ function NoteEditor({
               </button>
             </div>
           </div>
+
+          {/* TAG DISPLAY IN VIEW MODE */}
+          {tags.length > 0 && (
+            <div className="note-tags-display">
+              {tags.map(tag => (
+                <span key={tag} className="note-tag">{tag}</span>
+              ))}
+            </div>
+          )}
+
           <div className="note-content">
             {renderContentWithLinks()}
           </div>
 
-          {/* BACKLINKS SECTION */}
           {renderBacklinks()}
 
-          {/* HOVER PREVIEW TOOLTIP */}
           {hoveredLinkTitle && (
             <div 
               className="link-preview-tooltip"
