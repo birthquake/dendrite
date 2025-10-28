@@ -229,8 +229,14 @@ function App() {
             </div>
           </>
         ) : (
-<Graph notes={notes} onSelectNote={setSelectedNote} />
-          )}
+<Graph 
+  notes={notes} 
+  onSelectNote={(note) => {
+    setSelectedNote(note);
+    setView('list');
+  }} 
+/>          
+  )}
       </div>
     </div>
   );
