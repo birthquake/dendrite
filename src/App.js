@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db, auth } from './firebase';
 import { 
   collection, 
@@ -9,6 +9,8 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
@@ -30,7 +32,8 @@ function App() {
         loadNotes();
         setLoading(false);
       } catch (error) {
-        console.error('Error initializing app:', error);
+        toast.error('Failed to initialize app. Please refresh.');
+        setLoading(false);
       }
     };
     initApp();
@@ -43,10 +46,9 @@ function App() {
         id: doc.id,
         ...doc.data()
       }));
-      console.log('Loaded notes from Firestore:', notesArray);
       setNotes(notesArray);
     } catch (error) {
-      console.error('Error loading notes:', error);
+      toast.error('Failed to load notes');
     }
   };
 
@@ -57,18 +59,13 @@ function App() {
   const getBacklinks = (noteId) => {
     const targetNote = notes.find(n => n.id === noteId);
     if (!targetNote) {
-      console.log('Target note not found for id:', noteId);
       return [];
     }
-    
-    console.log('Looking for backlinks to:', targetNote.title);
-    console.log('All notes:', notes.map(n => ({ id: n.id, title: n.title, linkedNotes: n.linkedNotes })));
     
     const backlinks = notes.filter(note => 
       note.linkedNotes && note.linkedNotes.includes(noteId)
     );
     
-    console.log('Found backlinks:', backlinks.map(n => n.title));
     return backlinks;
   };
 
@@ -90,7 +87,7 @@ function App() {
       await loadNotes();
       return docRef.id;
     } catch (error) {
-      console.error('Error creating note:', error);
+      toast.error('Failed to create note');
       return null;
     }
   };
@@ -103,17 +100,14 @@ function App() {
     while ((match = linkRegex.exec(content)) !== null) {
       const linkTitle = match[1];
       const linkedNote = getNoteByTitle(linkTitle);
-      console.log('Found link to:', linkTitle, '- Note exists?', !!linkedNote, 'ID:', linkedNote?.id);
       if (linkedNote && !linkedNoteIds.includes(linkedNote.id)) {
         linkedNoteIds.push(linkedNote.id);
       }
     }
 
-    console.log('Total linkedNoteIds extracted:', linkedNoteIds);
     return linkedNoteIds;
   };
 
-  // Get all unique tags from all notes
   const getAllTags = () => {
     const tagsSet = new Set();
     notes.forEach(note => {
@@ -137,21 +131,15 @@ function App() {
       });
       await loadNotes();
       setIsCreatingNewNote(false);
+      toast.success('Note created successfully! ✓');
     } catch (error) {
-      console.error('Error creating note:', error);
+      toast.error('Failed to create note');
     }
   };
 
   const updateNote = async (noteId, title, content, linkedNotes = [], tags = []) => {
     try {
-      console.log('=== UPDATING NOTE ===');
-      console.log('Note ID:', noteId);
-      console.log('Title:', title);
-      console.log('Content:', content);
-      console.log('Tags:', tags);
-      
       const extractedLinkedNotes = extractLinkedNoteIds(content);
-      console.log('Extracted linked notes:', extractedLinkedNotes);
 
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
@@ -160,12 +148,11 @@ function App() {
         tags: tags
       });
       
-      console.log('Note saved to Firestore. Reloading...');
       await loadNotes();
-      
       setSelectedNote(null);
+      toast.success('Note saved successfully! ✓');
     } catch (error) {
-      console.error('Error updating note:', error);
+      toast.error('Failed to save note');
     }
   };
 
@@ -174,29 +161,72 @@ function App() {
       await deleteDoc(doc(db, 'notes', noteId));
       loadNotes();
       setSelectedNote(null);
+      toast.success('Note deleted ✓');
     } catch (error) {
-      console.error('Error deleting note:', error);
+      toast.error('Failed to delete note');
     }
   };
 
+  const handleKeyDown = useCallback((e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('save-note'));
+    }
+    
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      e.preventDefault();
+      setSelectedNote(null);
+      setIsCreatingNewNote(true);
+    }
+
+    if (e.key === 'Escape') {
+      setIsCreatingNewNote(false);
+      window.dispatchEvent(new CustomEvent('cancel-edit'));
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (loading) {
-    return <div className="loading">Loading Dendrite...</div>;
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        <p>Loading Dendrite...</p>
+      </div>
+    );
   }
 
   return (
     <div className="App">
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <header className="header">
         <h1>🧠 Dendrite</h1>
         <div className="view-toggle">
           <button 
             className={view === 'list' ? 'active' : ''} 
             onClick={() => setView('list')}
+            title="List view"
           >
             List
           </button>
           <button 
             className={view === 'graph' ? 'active' : ''} 
             onClick={() => setView('graph')}
+            title="Graph view"
           >
             Graph
           </button>
