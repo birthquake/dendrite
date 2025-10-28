@@ -84,7 +84,8 @@ function App() {
         title: title,
         content: '',
         createdAt: new Date(),
-        linkedNotes: []
+        linkedNotes: [],
+        tags: []
       });
       await loadNotes();
       return docRef.id;
@@ -112,7 +113,18 @@ function App() {
     return linkedNoteIds;
   };
 
-  const createNote = async (title, content) => {
+  // Get all unique tags from all notes
+  const getAllTags = () => {
+    const tagsSet = new Set();
+    notes.forEach(note => {
+      if (note.tags && Array.isArray(note.tags)) {
+        note.tags.forEach(tag => tagsSet.add(tag));
+      }
+    });
+    return Array.from(tagsSet).sort();
+  };
+
+  const createNote = async (title, content, tags = []) => {
     try {
       const linkedNotes = extractLinkedNoteIds(content);
 
@@ -120,7 +132,8 @@ function App() {
         title: title,
         content: content,
         createdAt: new Date(),
-        linkedNotes: linkedNotes
+        linkedNotes: linkedNotes,
+        tags: tags
       });
       await loadNotes();
       setIsCreatingNewNote(false);
@@ -129,12 +142,13 @@ function App() {
     }
   };
 
-  const updateNote = async (noteId, title, content, linkedNotes = []) => {
+  const updateNote = async (noteId, title, content, linkedNotes = [], tags = []) => {
     try {
       console.log('=== UPDATING NOTE ===');
       console.log('Note ID:', noteId);
       console.log('Title:', title);
       console.log('Content:', content);
+      console.log('Tags:', tags);
       
       const extractedLinkedNotes = extractLinkedNoteIds(content);
       console.log('Extracted linked notes:', extractedLinkedNotes);
@@ -142,7 +156,8 @@ function App() {
       await updateDoc(doc(db, 'notes', noteId), {
         title: title,
         content: content,
-        linkedNotes: extractedLinkedNotes
+        linkedNotes: extractedLinkedNotes,
+        tags: tags
       });
       
       console.log('Note saved to Firestore. Reloading...');
@@ -199,6 +214,7 @@ function App() {
                   setSelectedNote(null);
                   setIsCreatingNewNote(true);
                 }}
+                allTags={getAllTags()}
               />
             </div>
             <div className="editor">
@@ -212,6 +228,7 @@ function App() {
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
+                  allTags={getAllTags()}
                 />
               ) : (
                 <NoteEditor 
@@ -224,19 +241,20 @@ function App() {
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
+                  allTags={getAllTags()}
                 />
               )}
             </div>
           </>
         ) : (
-<Graph 
-  notes={notes} 
-  onSelectNote={(note) => {
-    setSelectedNote(note);
-    setView('list');
-  }} 
-/>          
-  )}
+          <Graph 
+            notes={notes} 
+            onSelectNote={(note) => {
+              setSelectedNote(note);
+              setView('list');
+            }} 
+          />
+        )}
       </div>
     </div>
   );
