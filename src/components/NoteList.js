@@ -1,28 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './NoteList.css';
 
 function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
 
-  // Filter notes based on search term AND selected tags
-  const filteredNotes = notes.filter(note => {
-    const title = note.title?.toLowerCase() || '';
-    const content = note.content?.toLowerCase() || '';
-    const search = searchTerm.toLowerCase();
-    
-    // Check search term match
-    const matchesSearch = title.includes(search) || content.includes(search);
-    
-    // Check tag match (if tags are selected, note must have at least one selected tag)
-    const matchesTags = selectedTags.length === 0 || 
-      (note.tags && note.tags.some(tag => selectedTags.includes(tag)));
-    
-    return matchesSearch && matchesTags;
-  });
+  // Debounce search term (300ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Filter notes based on debounced search term AND selected tags
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => {
+      const title = note.title?.toLowerCase() || '';
+      const content = note.content?.toLowerCase() || '';
+      const search = debouncedSearchTerm.toLowerCase();
+      
+      // Check search term match
+      const matchesSearch = title.includes(search) || content.includes(search);
+      
+      // Check tag match (if tags are selected, note must have at least one selected tag)
+      const matchesTags = selectedTags.length === 0 || 
+        (note.tags && note.tags.some(tag => selectedTags.includes(tag)));
+      
+      return matchesSearch && matchesTags;
+    });
+  }, [notes, debouncedSearchTerm, selectedTags]);
 
   const clearSearch = () => {
     setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
   const toggleTagFilter = (tag) => {
@@ -57,13 +70,11 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
           </button>
         )}
       </div>
-
       {searchTerm && (
         <div className="search-results-info">
           {filteredNotes.length} result{filteredNotes.length !== 1 ? 's' : ''}
         </div>
       )}
-
       {/* TAG FILTER */}
       {allTags.length > 0 && (
         <div className="tag-filter-container">
@@ -88,7 +99,6 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
           </div>
         </div>
       )}
-
       <div className="notes-container">
         {filteredNotes.length === 0 ? (
           <p className="empty-state">
@@ -116,9 +126,8 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
           ))
         )}
       </div>
-
       <button className="new-note-btn" onClick={onCreateNewNote}>
-        + New Note
+        + New Note (Ctrl+N)
       </button>
     </div>
   );
