@@ -64,15 +64,8 @@ function NoteEditor({
     setShowTagSuggestions(false);
   }, [note, isCreatingNewNote]);
 
-  // Listen for keyboard shortcuts
+  // Listen for keyboard shortcuts (Esc to cancel, and custom save event)
   useEffect(() => {
-    const handleSaveShortcut = (e) => {
-      if (isEditing && (e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-    };
-
     const handleCancelShortcut = (e) => {
       if (e.key === 'Escape' && isEditing) {
         if (note) {
@@ -87,12 +80,10 @@ function NoteEditor({
       }
     };
 
-    window.addEventListener('keydown', handleSaveShortcut);
     window.addEventListener('keydown', handleCancelShortcut);
     window.addEventListener('save-note', handleCustomSave);
 
     return () => {
-      window.removeEventListener('keydown', handleSaveShortcut);
       window.removeEventListener('keydown', handleCancelShortcut);
       window.removeEventListener('save-note', handleCustomSave);
     };
