@@ -23,6 +23,10 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list');
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [sortBy, setSortBy] = useState(() => {
+    // Load sort preference from localStorage
+    return localStorage.getItem('dendrite-sort-preference') || 'date-created';
+  });
   const toast = useToast();
 
   useEffect(() => {
@@ -52,6 +56,37 @@ function AppContent() {
     } catch (error) {
       toast.error('Failed to load notes');
     }
+  };
+
+  const getSortedNotes = (notesToSort) => {
+    const sorted = [...notesToSort];
+
+    switch (sortBy) {
+      case 'title-asc':
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'most-tags':
+        sorted.sort((a, b) => {
+          const aTagCount = a.tags ? a.tags.length : 0;
+          const bTagCount = b.tags ? b.tags.length : 0;
+          return bTagCount - aTagCount;
+        });
+        break;
+      case 'date-created':
+      default:
+        sorted.sort((a, b) => {
+          const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          return bDate - aDate;
+        });
+    }
+
+    return sorted;
+  };
+
+  const handleSortChange = (newSortOption) => {
+    setSortBy(newSortOption);
+    localStorage.setItem('dendrite-sort-preference', newSortOption);
   };
 
   const getNoteByTitle = (title) => {
@@ -244,6 +279,8 @@ function AppContent() {
     );
   }
 
+  const sortedNotes = getSortedNotes(notes);
+
   return (
     <div className="App">
       <KeyboardShortcutsModal 
@@ -274,7 +311,7 @@ function AppContent() {
           <>
             <div className="sidebar">
               <NoteList 
-                notes={notes} 
+                notes={sortedNotes} 
                 selectedNote={selectedNote}
                 onSelectNote={setSelectedNote}
                 onCreateNewNote={() => {
@@ -282,6 +319,8 @@ function AppContent() {
                   setIsCreatingNewNote(true);
                 }}
                 allTags={getAllTags()}
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
               />
             </div>
             <div className="editor">
