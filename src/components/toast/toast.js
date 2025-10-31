@@ -38,8 +38,8 @@ export function Toast({ id, type, message, onClose, duration = 3000 }) {
   const Icon = config.icon;
 
   useEffect(() => {
-    // Don't auto-dismiss error toasts
-    if (type === 'error') return;
+    // Don't auto-dismiss error toasts UNLESS a duration is provided
+    if (type === 'error' && !duration) return;
 
     const timer = setTimeout(() => {
       onClose(id);
