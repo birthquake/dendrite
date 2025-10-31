@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from './toast/toast-provider';
+import { formatTimeSince } from '../utils/timeFormatter';
 import './NoteEditor.css';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
@@ -28,6 +29,14 @@ function NoteEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   
+  // Auto-save state
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [displayedTime, setDisplayedTime] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasAutoSavedOnce, setHasAutoSavedOnce] = useState(false);
+  const autoSaveIntervalRef = useRef(null);
+  const timeUpdateIntervalRef = useRef(null);
+  
   // Autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [autocompleteResults, setAutocompleteResults] = useState([]);
@@ -46,24 +55,101 @@ function NoteEditor({
       setLinkedNotes(note.linkedNotes || []);
       setTags(note.tags || []);
       setIsEditing(false);
+      setLastSavedTime(new Date());
+      setHasUnsavedChanges(false);
+      setHasAutoSavedOnce(false);
     } else if (isCreatingNewNote) {
       setTitle('');
       setContent('');
       setLinkedNotes([]);
       setTags([]);
       setIsEditing(true);
+      setLastSavedTime(null);
+      setHasUnsavedChanges(false);
+      setHasAutoSavedOnce(false);
     } else {
       setTitle('');
       setContent('');
       setLinkedNotes([]);
       setTags([]);
       setIsEditing(true);
+      setLastSavedTime(null);
+      setHasUnsavedChanges(false);
+      setHasAutoSavedOnce(false);
     }
     
     setHoveredLinkTitle(null);
     setTagInput('');
     setShowTagSuggestions(false);
   }, [note, isCreatingNewNote]);
+
+  // Auto-save interval
+  useEffect(() => {
+    if (!isEditing) {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+      return;
+    }
+
+    const performAutoSave = async () => {
+      // Only auto-save if there are unsaved changes
+      if (!hasUnsavedChanges) return;
+
+      // Don't auto-save if title or content is empty
+      if (!title.trim() || !content.trim()) return;
+
+      try {
+        const extractedLinkedNotes = extractLinkedNoteIds(content);
+
+        if (note) {
+          // Auto-save existing note
+          await onSave(note.id, title, content, extractedLinkedNotes, tags);
+        } else {
+          // Auto-save new note
+          await onCreate(title, content, tags);
+        }
+
+        setLastSavedTime(new Date());
+        setHasUnsavedChanges(false);
+
+        // Show toast only on first auto-save
+        if (!hasAutoSavedOnce) {
+          toast.success('Note auto-saved');
+          setHasAutoSavedOnce(true);
+        }
+      } catch (error) {
+        // Silently fail on auto-save errors
+        console.error('Auto-save failed:', error);
+      }
+    };
+
+    autoSaveIntervalRef.current = setInterval(performAutoSave, 5000);
+
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, [isEditing, hasUnsavedChanges, title, content, tags, note, onSave, onCreate, hasAutoSavedOnce, toast]);
+
+  // Update displayed time every second
+  useEffect(() => {
+    if (!lastSavedTime) return;
+
+    const updateDisplayedTime = () => {
+      setDisplayedTime(formatTimeSince(lastSavedTime));
+    };
+
+    updateDisplayedTime();
+    timeUpdateIntervalRef.current = setInterval(updateDisplayedTime, 1000);
+
+    return () => {
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
+      }
+    };
+  }, [lastSavedTime]);
 
   // Listen for keyboard shortcuts (Esc to cancel, and custom save event)
   useEffect(() => {
@@ -111,6 +197,7 @@ function NoteEditor({
     const trimmedTag = tagName.trim().toLowerCase();
     if (trimmedTag && !tags.includes(trimmedTag)) {
       setTags([...tags, trimmedTag]);
+      setHasUnsavedChanges(true);
     }
     setTagInput('');
     setShowTagSuggestions(false);
@@ -118,6 +205,7 @@ function NoteEditor({
 
   const removeTag = (tagToRemove) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+    setHasUnsavedChanges(true);
   };
 
   const handleTagKeyDown = (e) => {
@@ -136,6 +224,7 @@ function NoteEditor({
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setContent(newContent);
+    setHasUnsavedChanges(true);
     setCursorPos(e.target.selectionStart);
 
     const textBeforeCursor = newContent.substring(0, e.target.selectionStart);
@@ -190,6 +279,7 @@ function NoteEditor({
     const newContent = beforeLink + '[[' + noteTitleToLink + ']]' + afterLink;
 
     setContent(newContent);
+    setHasUnsavedChanges(true);
 
     if (linkNoteId && !linkedNotes.includes(linkNoteId)) {
       setLinkedNotes([...linkedNotes, linkNoteId]);
@@ -312,6 +402,22 @@ function NoteEditor({
 
   // ===== END BACKLINKS SECTION =====
 
+  const extractLinkedNoteIds = (content) => {
+    const linkRegex = /\[\[([^\]]+)\]\]/g;
+    const linkedNoteIds = [];
+    let match;
+
+    while ((match = linkRegex.exec(content)) !== null) {
+      const linkTitle = match[1];
+      const linkedNote = getNoteByTitle(linkTitle);
+      if (linkedNote && !linkedNoteIds.includes(linkedNote.id)) {
+        linkedNoteIds.push(linkedNote.id);
+      }
+    }
+
+    return linkedNoteIds;
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast.error('Note title cannot be empty', 3000);
@@ -336,6 +442,9 @@ function NoteEditor({
         setTags([]);
       }
       setIsEditing(false);
+      setLastSavedTime(new Date());
+      setHasUnsavedChanges(false);
+      setHasAutoSavedOnce(false);
     } catch (error) {
       toast.error('Failed to save note');
     } finally {
@@ -381,10 +490,20 @@ function NoteEditor({
             className="editor-title"
             placeholder="Note title..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setHasUnsavedChanges(true);
+            }}
             autoFocus
             disabled={isSaving}
           />
+
+          {/* AUTO-SAVE INDICATOR */}
+          {displayedTime && (
+            <div className="auto-save-indicator">
+              {displayedTime}
+            </div>
+          )}
 
           {/* TAG INPUT */}
           <div className="tag-input-container">
