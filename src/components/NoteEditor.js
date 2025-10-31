@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-toastify';
+import { useToast } from './toast/toast-provider';
 import './NoteEditor.css';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
@@ -16,6 +16,7 @@ function NoteEditor({
   createNoteIfNotExists,
   allTags = []
 }) {
+  const toast = useToast();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(!note);
