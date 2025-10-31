@@ -556,3 +556,35 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
+
+/* Note Timestamps */
+.note-timestamps {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #808080;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.note-timestamp-created {
+  display: flex;
+  align-items: center;
+  color: #808080;
+  font-weight: 400;
+}
+
+.note-timestamp-modified {
+  display: flex;
+  align-items: center;
+  color: #808080;
+  font-weight: 400;
+}
+
+.note-timestamp-created:hover,
+.note-timestamp-modified:hover {
+  color: #a0a0a0;
+  transition: color 0.2s ease;
+}
