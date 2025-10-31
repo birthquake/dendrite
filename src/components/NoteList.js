@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { formatTimeSince } from '../utils/timeFormatter';
 import './NoteList.css';
 
 function NoteList({ 
@@ -81,6 +82,14 @@ function NoteList({
     setSelectedTags([]);
   };
 
+  const getCreatedTime = (note) => {
+    const createdDate = note.createdAt?.toDate?.() || new Date(note.createdAt);
+    if (!createdDate || isNaN(createdDate.getTime())) {
+      return null;
+    }
+    return formatTimeSince(createdDate);
+  };
+
   return (
     <div className="note-list">
       <div className="note-list-header">
@@ -161,13 +170,20 @@ function NoteList({
             >
               <h3>{note.title || 'Untitled'}</h3>
               <p>{note.content?.substring(0, 50)}...</p>
-              {note.tags && note.tags.length > 0 && (
-                <div className="note-tags">
-                  {note.tags.map(tag => (
-                    <span key={tag} className="note-tag-small">{tag}</span>
-                  ))}
-                </div>
-              )}
+              <div className="note-item-meta">
+                {getCreatedTime(note) && (
+                  <span className="note-item-created">
+                    {getCreatedTime(note)}
+                  </span>
+                )}
+                {note.tags && note.tags.length > 0 && (
+                  <div className="note-tags">
+                    {note.tags.map(tag => (
+                      <span key={tag} className="note-tag-small">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ))
         )}
