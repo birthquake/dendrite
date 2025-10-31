@@ -1,7 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import './NoteList.css';
 
-function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags = [] }) {
+function NoteList({ 
+  notes, 
+  selectedNote, 
+  onSelectNote, 
+  onCreateNewNote, 
+  allTags = [],
+  sortBy = 'date-created',
+  onSortChange
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
@@ -15,9 +23,9 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Filter notes based on debounced search term AND selected tags
+  // Filter and sort notes based on debounced search term, selected tags, and sort preference
   const filteredNotes = useMemo(() => {
-    return notes.filter(note => {
+    let result = notes.filter(note => {
       const title = note.title?.toLowerCase() || '';
       const content = note.content?.toLowerCase() || '';
       const search = debouncedSearchTerm.toLowerCase();
@@ -31,7 +39,30 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
       
       return matchesSearch && matchesTags;
     });
-  }, [notes, debouncedSearchTerm, selectedTags]);
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'title-asc':
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'most-tags':
+        result.sort((a, b) => {
+          const aTagCount = a.tags ? a.tags.length : 0;
+          const bTagCount = b.tags ? b.tags.length : 0;
+          return bTagCount - aTagCount;
+        });
+        break;
+      case 'date-created':
+      default:
+        result.sort((a, b) => {
+          const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          return bDate - aDate;
+        });
+    }
+
+    return result;
+  }, [notes, debouncedSearchTerm, selectedTags, sortBy]);
 
   const clearSearch = () => {
     setSearchTerm('');
@@ -54,6 +85,21 @@ function NoteList({ notes, selectedNote, onSelectNote, onCreateNewNote, allTags 
     <div className="note-list">
       <div className="note-list-header">
         <h2>Your Notes</h2>
+      </div>
+      
+      {/* SORT DROPDOWN */}
+      <div className="sort-container">
+        <label htmlFor="sort-select">Sort by:</label>
+        <select
+          id="sort-select"
+          className="sort-select"
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value)}
+        >
+          <option value="date-created">Date Created</option>
+          <option value="title-asc">Title A-Z</option>
+          <option value="most-tags">Most Tags</option>
+        </select>
       </div>
       
       <div className="search-container">
