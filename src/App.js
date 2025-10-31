@@ -77,8 +77,8 @@ function AppContent() {
       case 'date-created':
       default:
         sorted.sort((a, b) => {
-          const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-          const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          const aDate = a.updatedAt?.toDate?.() || a.updatedAt || a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const bDate = b.updatedAt?.toDate?.() || b.updatedAt || b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
           return bDate - aDate;
         });
     }
@@ -120,6 +120,7 @@ function AppContent() {
         title: title,
         content: '',
         createdAt: new Date(),
+        updatedAt: new Date(),
         linkedNotes: [],
         tags: []
       });
@@ -165,6 +166,7 @@ function AppContent() {
         title: title,
         content: content,
         createdAt: new Date(),
+        updatedAt: new Date(),
         linkedNotes: linkedNotes,
         tags: tags
       });
@@ -184,7 +186,8 @@ function AppContent() {
         title: title,
         content: content,
         linkedNotes: extractedLinkedNotes,
-        tags: tags
+        tags: tags,
+        updatedAt: new Date()
       });
       
       await loadNotes();
@@ -220,6 +223,7 @@ function AppContent() {
         title: newTitle,
         content: noteToDuplicate.content,
         createdAt: new Date(),
+        updatedAt: new Date(),
         linkedNotes: noteToDuplicate.linkedNotes || [],
         tags: noteToDuplicate.tags || []
       });
