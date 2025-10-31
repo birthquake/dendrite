@@ -419,6 +419,24 @@ function NoteEditor({
     return linkedNoteIds;
   };
 
+  const getCreatedTime = () => {
+    if (!note) return null;
+    const createdDate = note.createdAt?.toDate?.() || new Date(note.createdAt);
+    if (!createdDate || isNaN(createdDate.getTime())) {
+      return null;
+    }
+    return formatTimeSince(createdDate);
+  };
+
+  const getModifiedTime = () => {
+    if (!note) return null;
+    const modifiedDate = note.updatedAt?.toDate?.() || note.updatedAt || note.createdAt?.toDate?.() || new Date(note.createdAt);
+    if (!modifiedDate || isNaN(modifiedDate.getTime())) {
+      return null;
+    }
+    return formatTimeSince(modifiedDate);
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast.error('Note title cannot be empty', 3000);
@@ -644,6 +662,22 @@ function NoteEditor({
               </button>
             </div>
           </div>
+
+          {/* TIMESTAMPS */}
+          {(getCreatedTime() || getModifiedTime()) && (
+            <div className="note-timestamps">
+              {getCreatedTime() && (
+                <span className="note-timestamp-created">
+                  Created {getCreatedTime()}
+                </span>
+              )}
+              {getModifiedTime() && (
+                <span className="note-timestamp-modified">
+                  Modified {getModifiedTime()}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* TAG DISPLAY IN VIEW MODE */}
           {tags.length > 0 && (
