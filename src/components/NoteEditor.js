@@ -10,6 +10,7 @@ function NoteEditor({
   onCreate, 
   onSave, 
   onDelete,
+  onDuplicate,
   onSelectNote,
   isCreatingNewNote = false,
   getNoteByTitle,
@@ -469,6 +470,17 @@ function NoteEditor({
     }
   };
 
+  const handleDuplicate = async () => {
+    setIsSaving(true);
+    try {
+      await onDuplicate(note.id);
+    } catch (error) {
+      toast.error('Failed to duplicate note');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (!note && !isEditing && !isCreatingNewNote) {
     return <div className="editor-empty">Select a note or create a new one</div>;
   }
@@ -614,6 +626,14 @@ function NoteEditor({
                 disabled={isSaving}
               >
                 Edit
+              </button>
+              <button 
+                className="duplicate-btn" 
+                onClick={handleDuplicate}
+                disabled={isSaving}
+                title="Duplicate this note"
+              >
+                Duplicate
               </button>
               <button 
                 className="delete-btn" 
