@@ -1,0 +1,239 @@
+/* Overlay */
+.keyboard-shortcuts-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Backdrop */
+.keyboard-shortcuts-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal */
+.keyboard-shortcuts-modal {
+  position: relative;
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  max-width: 42rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Header */
+.keyboard-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #2a2a2a;
+  gap: 1rem;
+}
+
+.keyboard-shortcuts-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Close button */
+.keyboard-shortcuts-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #999999;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.keyboard-shortcuts-close:hover {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.keyboard-shortcuts-close:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Content */
+.keyboard-shortcuts-content {
+  padding: 1.5rem;
+}
+
+/* Grid */
+.keyboard-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Shortcut Item */
+.keyboard-shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #0f0f0f;
+  transition: background-color 0.2s ease;
+}
+
+.keyboard-shortcut-item:hover {
+  background-color: #1f1f1f;
+}
+
+/* Description */
+.shortcut-description {
+  font-size: 0.875rem;
+  color: #cccccc;
+  flex: 1;
+}
+
+/* Keys container */
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+/* Key group */
+.key-group {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Keyboard key */
+.keyboard-key {
+  display: inline-block;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  color: #d1d5db;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 0 #1a1a1a;
+  min-width: 2rem;
+  text-align: center;
+  user-select: none;
+}
+
+/* Highlighted key */
+.keyboard-key-highlight {
+  color: #6366f1;
+  background-color: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Key plus separator */
+.key-plus {
+  font-size: 0.75rem;
+  color: #666666;
+  margin: 0 0.25rem;
+}
+
+/* Footer */
+.keyboard-shortcuts-footer {
+  padding-top: 1.5rem;
+  border-top: 1px solid #2a2a2a;
+  text-align: center;
+}
+
+.keyboard-shortcuts-footer p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #808080;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .keyboard-shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .keyboard-shortcuts-modal {
+    max-height: 80vh;
+  }
+
+  .keyboard-shortcuts-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .keyboard-shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .shortcut-keys {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Scrollbar styling */
+.keyboard-shortcuts-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-thumb {
+  background-color: #3a3a3a;
+  border-radius: 4px;
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-thumb:hover {
+  background-color: #4a4a4a;
+}
