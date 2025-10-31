@@ -56,8 +56,8 @@ function NoteList({
       case 'date-created':
       default:
         result.sort((a, b) => {
-          const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-          const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          const aDate = a.updatedAt?.toDate?.() || a.updatedAt || a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const bDate = b.updatedAt?.toDate?.() || b.updatedAt || b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
           return bDate - aDate;
         });
     }
@@ -82,12 +82,12 @@ function NoteList({
     setSelectedTags([]);
   };
 
-  const getCreatedTime = (note) => {
-    const createdDate = note.createdAt?.toDate?.() || new Date(note.createdAt);
-    if (!createdDate || isNaN(createdDate.getTime())) {
+  const getModifiedTime = (note) => {
+    const modifiedDate = note.updatedAt?.toDate?.() || note.updatedAt || note.createdAt?.toDate?.() || new Date(note.createdAt);
+    if (!modifiedDate || isNaN(modifiedDate.getTime())) {
       return null;
     }
-    return formatTimeSince(createdDate);
+    return formatTimeSince(modifiedDate);
   };
 
   return (
@@ -171,9 +171,9 @@ function NoteList({
               <h3>{note.title || 'Untitled'}</h3>
               <p>{note.content?.substring(0, 50)}...</p>
               <div className="note-item-meta">
-                {getCreatedTime(note) && (
-                  <span className="note-item-created">
-                    {getCreatedTime(note)}
+                {getModifiedTime(note) && (
+                  <span className="note-item-modified">
+                    {getModifiedTime(note)}
                   </span>
                 )}
                 {note.tags && note.tags.length > 0 && (
