@@ -314,12 +314,12 @@ function NoteEditor({
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error('Note title cannot be empty');
+      toast.error('Note title cannot be empty', 3000);
       return;
     }
 
     if (!content.trim()) {
-      toast.error('Note content cannot be empty');
+      toast.error('Note content cannot be empty', 3000);
       return;
     }
 
