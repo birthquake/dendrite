@@ -169,6 +169,42 @@ function AppContent() {
     }
   };
 
+  const duplicateNote = async (noteId) => {
+    try {
+      const noteToDuplicate = notes.find(n => n.id === noteId);
+      if (!noteToDuplicate) {
+        toast.error('Note not found');
+        return;
+      }
+
+      const newTitle = `${noteToDuplicate.title} (copy)`;
+      
+      const docRef = await addDoc(collection(db, 'notes'), {
+        title: newTitle,
+        content: noteToDuplicate.content,
+        createdAt: new Date(),
+        linkedNotes: noteToDuplicate.linkedNotes || [],
+        tags: noteToDuplicate.tags || []
+      });
+
+      await loadNotes();
+      
+      // Select the new duplicated note
+      const newNote = {
+        id: docRef.id,
+        title: newTitle,
+        content: noteToDuplicate.content,
+        linkedNotes: noteToDuplicate.linkedNotes || [],
+        tags: noteToDuplicate.tags || []
+      };
+      
+      setSelectedNote(newNote);
+      toast.success('Note duplicated!');
+    } catch (error) {
+      toast.error('Failed to duplicate note');
+    }
+  };
+
   const handleKeyDown = useCallback((e) => {
     // Cmd+/ or Ctrl+/ to show shortcuts
     if ((e.ctrlKey || e.metaKey) && e.key === '/') {
@@ -255,6 +291,7 @@ function AppContent() {
                   allNotes={notes}
                   onSave={updateNote}
                   onDelete={deleteNote}
+                  onDuplicate={duplicateNote}
                   onSelectNote={setSelectedNote}
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
