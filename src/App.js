@@ -11,6 +11,7 @@ import {
 import { signInAnonymously } from 'firebase/auth';
 import { ToastProvider, useToast } from './components/toast/toast-provider';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { CommandPalette } from './components/CommandPalette';
 import './App.css';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
@@ -23,6 +24,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list');
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [sortBy, setSortBy] = useState(() => {
     // Load sort preference from localStorage
     return localStorage.getItem('dendrite-sort-preference') || 'date-created';
@@ -241,6 +243,13 @@ function AppContent() {
   };
 
   const handleKeyDown = useCallback((e) => {
+    // Cmd+K or Ctrl+K to show command palette
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      setShowCommandPalette(true);
+      return;
+    }
+
     // Cmd+/ or Ctrl+/ to show shortcuts
     if ((e.ctrlKey || e.metaKey) && e.key === '/') {
       e.preventDefault();
@@ -286,6 +295,15 @@ function AppContent() {
       <KeyboardShortcutsModal 
         isOpen={showShortcutsModal} 
         onClose={() => setShowShortcutsModal(false)} 
+      />
+      <CommandPalette 
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        notes={notes}
+        onSelectNote={(note) => {
+          setSelectedNote(note);
+          setView('list');
+        }}
       />
       <header className="header">
         <h1>🧠 Dendrite</h1>
