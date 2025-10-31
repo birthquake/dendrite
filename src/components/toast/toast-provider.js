@@ -29,9 +29,10 @@ export function ToastProvider({ children }) {
   );
 
   const error = useCallback(
-    (message) => {
-      // Errors don't auto-dismiss
-      showToast('error', message);
+    (message, duration) => {
+      // If duration provided, it's a validation error (auto-dismiss)
+      // If no duration, it's a critical error (stays until dismissed)
+      showToast('error', message, duration);
     },
     [showToast]
   );
