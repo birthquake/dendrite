@@ -170,8 +170,8 @@ function AppContent() {
   };
 
   const handleKeyDown = useCallback((e) => {
-    // Cmd+? or Ctrl+? to show shortcuts
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '?') {
+    // Cmd+/ or Ctrl+/ to show shortcuts
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
       e.preventDefault();
       setShowShortcutsModal(true);
       return;
