@@ -317,8 +317,8 @@
   gap: 0.5rem;
 }
 
-/* Created Time */
-.note-item-created {
+/* Modified Time */
+.note-item-modified {
   font-size: 0.75rem;
   color: #808080;
   font-weight: 400;
