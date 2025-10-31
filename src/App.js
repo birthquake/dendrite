@@ -9,19 +9,19 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastProvider, useToast } from './components/toast/toast-provider';
 import './App.css';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
 import Graph from './components/Graph';
 
-function App() {
+function AppContent() {
   const [notes, setNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list');
+  const toast = useToast();
 
   useEffect(() => {
     const initApp = async () => {
@@ -37,7 +37,7 @@ function App() {
       }
     };
     initApp();
-  }, []);
+  }, [toast]);
 
   const loadNotes = async () => {
     try {
@@ -131,7 +131,7 @@ function App() {
       });
       await loadNotes();
       setIsCreatingNewNote(false);
-      toast.success('Note created successfully! ✓');
+      toast.success('Note created successfully!');
     } catch (error) {
       toast.error('Failed to create note');
     }
@@ -150,7 +150,7 @@ function App() {
       
       await loadNotes();
       setSelectedNote(null);
-      toast.success('Note saved successfully! ✓');
+      toast.success('Note saved successfully!');
     } catch (error) {
       toast.error('Failed to save note');
     }
@@ -161,7 +161,7 @@ function App() {
       await deleteDoc(doc(db, 'notes', noteId));
       loadNotes();
       setSelectedNote(null);
-      toast.success('Note deleted ✓');
+      toast.success('Note deleted');
     } catch (error) {
       toast.error('Failed to delete note');
     }
@@ -201,18 +201,6 @@ function App() {
 
   return (
     <div className="App">
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
       <header className="header">
         <h1>🧠 Dendrite</h1>
         <div className="view-toggle">
@@ -287,6 +275,14 @@ function App() {
         )}
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 
