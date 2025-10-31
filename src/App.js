@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 import { ToastProvider, useToast } from './components/toast/toast-provider';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import './App.css';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
@@ -21,6 +22,7 @@ function AppContent() {
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list');
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -168,6 +170,13 @@ function AppContent() {
   };
 
   const handleKeyDown = useCallback((e) => {
+    // Cmd+? or Ctrl+? to show shortcuts
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '?') {
+      e.preventDefault();
+      setShowShortcutsModal(true);
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('save-note'));
@@ -201,6 +210,10 @@ function AppContent() {
 
   return (
     <div className="App">
+      <KeyboardShortcutsModal 
+        isOpen={showShortcutsModal} 
+        onClose={() => setShowShortcutsModal(false)} 
+      />
       <header className="header">
         <h1>🧠 Dendrite</h1>
         <div className="view-toggle">
