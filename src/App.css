@@ -4,12 +4,17 @@
   box-sizing: border-box;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-secondary);
   transition: background-color 0.3s ease, color 0.3s ease;
-  overflow: hidden;
 }
 
 .App {
@@ -64,7 +69,7 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   gap: 16px;
   flex-shrink: 0;
-  z-index: 60;
+  z-index: 70;
   min-height: 64px;
 }
 
@@ -122,6 +127,7 @@ body {
   overflow: hidden;
   position: relative;
   width: 100%;
+  height: 100%;
 }
 
 .sidebar {
@@ -211,7 +217,7 @@ body {
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 40;
+  z-index: 41;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -232,7 +238,7 @@ body {
   }
 
   .sidebar {
-    display: block;
+    display: flex;
     position: relative;
     width: 300px;
     transform: none;
@@ -240,8 +246,9 @@ body {
   }
 
   .editor {
+    display: flex;
     flex: 1;
-    display: block;
+    position: relative;
   }
 
   .mobile-sidebar-overlay {
@@ -249,7 +256,7 @@ body {
   }
 }
 
-/* ===== TABLET & MOBILE: Overlay sidebar layout (<=768px) ===== */
+/* ===== TABLET & MOBILE: Show editor by default (<=768px) ===== */
 
 @media (max-width: 768px) {
   .main-container {
@@ -257,42 +264,54 @@ body {
     position: relative;
   }
 
-  /* Sidebar is hidden off-screen by default */
+  /* DEFAULT: HIDE SIDEBAR, SHOW EDITOR */
   .sidebar {
+    display: none;
+  }
+
+  .editor {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+  }
+
+  /* WHEN SIDEBAR IS OPEN: SHOW SIDEBAR, HIDE EDITOR */
+  .main-container.sidebar-open .sidebar {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 64px;
     bottom: 0;
     width: 80%;
     max-width: 300px;
-    z-index: 45;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
     border-right: 1px solid var(--border-primary);
   }
 
-  /* When sidebar is open, slide it in */
-  .main-container.sidebar-open .sidebar {
-    transform: translateX(0);
+  .main-container.sidebar-open .editor {
+    display: none;
   }
 
-  /* Editor takes full width */
-  .editor {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 30;
-  }
-
-  /* Show overlay only when sidebar is open */
+  /* Show overlay when sidebar is open */
   .mobile-sidebar-overlay {
     display: none;
   }
 
   .main-container.sidebar-open .mobile-sidebar-overlay {
     display: block;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 41;
   }
 
   .header {
@@ -342,9 +361,13 @@ body {
     font-size: 12px;
   }
 
-  .sidebar {
+  .main-container.sidebar-open .sidebar {
     top: 56px;
     width: 85%;
+  }
+
+  .mobile-sidebar-overlay {
+    top: 56px;
   }
 
   .editor-empty {
@@ -375,8 +398,12 @@ body {
     font-size: 11px;
   }
 
-  .sidebar {
+  .main-container.sidebar-open .sidebar {
     width: 90%;
+    top: 52px;
+  }
+
+  .mobile-sidebar-overlay {
     top: 52px;
   }
 
