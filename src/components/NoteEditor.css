@@ -13,17 +13,9 @@
   justify-content: center;
   height: 100%;
   color: var(--text-tertiary);
-  font-size: clamp(14px, 3vw, 16px);
   text-align: center;
   padding: clamp(16px, 5vw, 40px);
   gap: clamp(20px, 5vw, 32px);
-}
-
-.note-editor-empty-title {
-  margin: 0;
-  font-size: clamp(20px, 5vw, 28px);
-  font-weight: 700;
-  color: var(--text-primary);
 }
 
 .note-editor-empty-actions {
@@ -48,7 +40,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.empty-action-btn svg {
+  width: clamp(18px, 4vw, 20px);
+  height: clamp(18px, 4vw, 20px);
+  flex-shrink: 0;
 }
 
 .empty-action-btn:hover {
