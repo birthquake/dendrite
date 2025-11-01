@@ -1,23 +1,168 @@
-/* Dark (default) */
---bg-primary: #0f0f0f;
---text-primary: #ffffff;
+/* ============================================
+   DENDRITE THEME VARIABLES
+   Dark theme is default, light theme via .light-theme
+   ============================================ */
 
-/* Light (when .light-theme class is added) */
-.light-theme {
-  --bg-primary: #ffffff;
-  --text-primary: #111827;
+/* ===== DARK THEME (DEFAULT) ===== */
+:root {
+  /* BACKGROUNDS */
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: #1a1a1a;
+  --bg-hover-light: #242424;
+  --bg-modal: #1a1a1a;
+
+  /* TEXT COLORS */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #9ca3af;
+  --text-muted: #999999;
+  --text-placeholder: #666666;
+  --text-disabled: #808080;
+
+  /* BORDERS & DIVIDERS */
+  --border-primary: #2d2d2d;
+  --border-secondary: #3a3a3a;
+  --border-light: #1a1a1a;
+
+  /* PRIMARY COLOR (INDIGO) */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-light: #818cf8;
+  --color-primary-lighter: #a78bfa;
+  --color-primary-bg: rgba(99, 102, 241, 0.1);
+  --color-primary-bg-hover: rgba(99, 102, 241, 0.2);
+
+  /* STATUS COLORS - SUCCESS */
+  --color-success: #10b981;
+  --color-success-light: #6ee7b7;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(16, 185, 129, 0.3);
+  --color-success-text: #d1fae5;
+
+  /* STATUS COLORS - ERROR */
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-error-text: #fee2e2;
+
+  /* STATUS COLORS - INFO */
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+  --color-info-border: rgba(59, 130, 246, 0.3);
+  --color-info-text: #dbeafe;
+
+  /* STATUS COLORS - WARNING */
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
+  --color-warning-text: #fef3c7;
+
+  /* SHADOWS */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+  /* BACKDROP & OVERLAY */
+  --backdrop-blur: blur(4px);
+  --overlay-dark: rgba(0, 0, 0, 0.6);
+  --overlay-darker: rgba(0, 0, 0, 0.7);
+
+  /* SCROLLBAR */
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb: #3a3a3a;
+  --scrollbar-thumb-hover: #4a4a4a;
+
+  /* TRANSITIONS */
+  --transition-fast: all 0.2s ease;
+  --transition-base: all 0.3s ease;
+  --transition-slow: all 0.5s ease;
 }
-```
 
----
+/* ===== LIGHT THEME ===== */
+:root.light-theme {
+  /* BACKGROUNDS */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-hover-light: #e5e7eb;
+  --bg-modal: #ffffff;
 
-## 📁 Next Steps for You:
+  /* TEXT COLORS */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-placeholder: #d1d5db;
+  --text-disabled: #9ca3af;
 
-1. **Create the folder** if it doesn't exist:
-```
-   src/styles/
-```
+  /* BORDERS & DIVIDERS */
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --border-light: #f3f4f6;
 
-2. **Save this file** as:
-```
-   src/styles/theme-variables.css
+  /* PRIMARY COLOR (INDIGO) */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-light: #818cf8;
+  --color-primary-lighter: #a78bfa;
+  --color-primary-bg: rgba(99, 102, 241, 0.05);
+  --color-primary-bg-hover: rgba(99, 102, 241, 0.1);
+
+  /* STATUS COLORS - SUCCESS */
+  --color-success: #10b981;
+  --color-success-light: #059669;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(16, 185, 129, 0.3);
+  --color-success-text: #065f46;
+
+  /* STATUS COLORS - ERROR */
+  --color-error: #ef4444;
+  --color-error-light: #dc2626;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-error-text: #7f1d1d;
+
+  /* STATUS COLORS - INFO */
+  --color-info: #3b82f6;
+  --color-info-light: #1d4ed8;
+  --color-info-bg: rgba(59, 130, 246, 0.1);
+  --color-info-border: rgba(59, 130, 246, 0.3);
+  --color-info-text: #1e40af;
+
+  /* STATUS COLORS - WARNING */
+  --color-warning: #f59e0b;
+  --color-warning-light: #d97706;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
+  --color-warning-text: #92400e;
+
+  /* SHADOWS */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  /* BACKDROP & OVERLAY */
+  --backdrop-blur: blur(4px);
+  --overlay-dark: rgba(0, 0, 0, 0.4);
+  --overlay-darker: rgba(0, 0, 0, 0.5);
+
+  /* SCROLLBAR */
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb: #d1d5db;
+  --scrollbar-thumb-hover: #9ca3af;
+
+  /* TRANSITIONS */
+  --transition-fast: all 0.2s ease;
+  --transition-base: all 0.3s ease;
+  --transition-slow: all 0.5s ease;
+}
