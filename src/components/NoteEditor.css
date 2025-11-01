@@ -8,6 +8,7 @@
 
 .note-editor-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
@@ -15,6 +16,76 @@
   font-size: clamp(14px, 3vw, 16px);
   text-align: center;
   padding: clamp(16px, 5vw, 40px);
+  gap: clamp(20px, 5vw, 32px);
+}
+
+.note-editor-empty-title {
+  margin: 0;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.note-editor-empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 16px);
+  width: 100%;
+  max-width: 300px;
+}
+
+.empty-action-btn {
+  padding: clamp(14px, 3vw, 16px) clamp(20px, 4vw, 24px);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: clamp(6px, 1vw, 8px);
+  color: var(--text-secondary);
+  font-size: clamp(14px, 2.5vw, 16px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.empty-action-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-primary);
+  transform: translateY(-2px);
+}
+
+.empty-action-btn:active {
+  transform: translateY(0);
+}
+
+.empty-action-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
+}
+
+.empty-action-select {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+}
+
+.empty-action-select:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.empty-action-create {
+  color: var(--color-success);
+  border-color: var(--color-success);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+.empty-action-create:hover {
+  background-color: var(--color-success);
+  color: white;
 }
 
 /* ===== HEADER WITH ICON BUTTONS ===== */
