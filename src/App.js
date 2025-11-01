@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db, auth } from './firebase';
+import { db } from './firebase';
 import { 
   collection, 
   addDoc, 
   getDocs, 
   deleteDoc, 
   doc,
-  updateDoc
+  updateDoc,
+  query,
+  where
 } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
 import './styles/theme-variables.css';
 import './App.css';
 import { ToastProvider, useToast } from './components/toast/toast-provider';
@@ -19,6 +20,8 @@ import HamburgerMenu from './components/HamburgerMenu';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
 import Graph from './components/Graph';
+import { useAuth } from './hooks/useAuth';
+import { PrivateRoute } from './components/PrivateRoute';
 
 function AppContent() {
   const [notes, setNotes] = useState([]);
@@ -30,18 +33,15 @@ function AppContent() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [sortBy, setSortBy] = useState(() => {
-    // Load sort preference from localStorage
     return localStorage.getItem('dendrite-sort-preference') || 'date-created';
   });
   const toast = useToast();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const initApp = async () => {
       try {
-        if (!auth.currentUser) {
-          await signInAnonymously(auth);
-        }
-        loadNotes();
+        await loadNotes();
         setLoading(false);
       } catch (error) {
         toast.error('Failed to initialize app. Please refresh.');
@@ -49,11 +49,15 @@ function AppContent() {
       }
     };
     initApp();
-  }, [toast]);
+  }, [user, toast]);
 
   const loadNotes = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'notes'));
+      const q = query(
+        collection(db, 'notes'),
+        where('userId', '==', user.uid)
+      );
+      const querySnapshot = await getDocs(q);
       const notesArray = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -121,6 +125,7 @@ function AppContent() {
     
     try {
       const docRef = await addDoc(collection(db, 'notes'), {
+        userId: user.uid,
         title: title,
         content: '',
         createdAt: new Date(),
@@ -167,6 +172,7 @@ function AppContent() {
       const linkedNotes = extractLinkedNoteIds(content);
 
       await addDoc(collection(db, 'notes'), {
+        userId: user.uid,
         title: title,
         content: content,
         createdAt: new Date(),
@@ -224,6 +230,7 @@ function AppContent() {
       const newTitle = `${noteToDuplicate.title} (copy)`;
       
       const docRef = await addDoc(collection(db, 'notes'), {
+        userId: user.uid,
         title: newTitle,
         content: noteToDuplicate.content,
         createdAt: new Date(),
@@ -234,7 +241,6 @@ function AppContent() {
 
       await loadNotes();
       
-      // Select the new duplicated note
       const newNote = {
         id: docRef.id,
         title: newTitle,
@@ -251,14 +257,12 @@ function AppContent() {
   };
 
   const handleKeyDown = useCallback((e) => {
-    // Cmd+K or Ctrl+K to show command palette
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
       setShowCommandPalette(true);
       return;
     }
 
-    // Cmd+/ or Ctrl+/ to show shortcuts
     if ((e.ctrlKey || e.metaKey) && e.key === '/') {
       e.preventDefault();
       setShowShortcutsModal(true);
@@ -287,20 +291,17 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Close mobile sidebar when a note is selected
   const handleSelectNote = (note) => {
     setSelectedNote(note);
     setIsMobileSidebarOpen(false);
   };
 
-  // Close mobile sidebar when creating new note
   const handleCreateNewNote = () => {
     setSelectedNote(null);
     setIsCreatingNewNote(true);
     setIsMobileSidebarOpen(false);
   };
 
-  // Handle cancel from NoteEditor
   const handleCancelEdit = () => {
     setIsCreatingNewNote(false);
     setSelectedNote(null);
@@ -343,6 +344,18 @@ function AppContent() {
             />
           )}
           <ThemeToggle />
+          
+          <div className="user-profile">
+            <span className="user-email">{user.email}</span>
+            <button 
+              className="logout-btn"
+              onClick={logout}
+              title="Logout"
+            >
+              Logout
+            </button>
+          </div>
+
           <div className="view-toggle">
             <button 
               className={view === 'list' ? 'active' : ''} 
@@ -362,7 +375,6 @@ function AppContent() {
         </div>
       </header>
 
-      {/* Mobile sidebar overlay */}
       {isMobileSidebarOpen && view === 'list' && (
         <div 
           className="mobile-sidebar-overlay"
@@ -435,7 +447,9 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <AppContent />
+      <PrivateRoute>
+        <AppContent />
+      </PrivateRoute>
     </ToastProvider>
   );
 }
