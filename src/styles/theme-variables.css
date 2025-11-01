@@ -1,0 +1,23 @@
+/* Dark (default) */
+--bg-primary: #0f0f0f;
+--text-primary: #ffffff;
+
+/* Light (when .light-theme class is added) */
+.light-theme {
+  --bg-primary: #ffffff;
+  --text-primary: #111827;
+}
+```
+
+---
+
+## 📁 Next Steps for You:
+
+1. **Create the folder** if it doesn't exist:
+```
+   src/styles/
+```
+
+2. **Save this file** as:
+```
+   src/styles/theme-variables.css
