@@ -19,18 +19,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background-color: var(--overlay-darker);
+  backdrop-filter: var(--backdrop-blur);
   animation: fadeIn 0.2s ease-out;
 }
 
 /* Modal */
 .keyboard-shortcuts-modal {
   position: relative;
-  background-color: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background-color: var(--bg-modal);
+  border: 1px solid var(--border-secondary);
   border-radius: 0.75rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-xl);
   max-width: 42rem;
   width: 100%;
   max-height: 90vh;
@@ -44,7 +44,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--border-secondary);
   gap: 1rem;
 }
 
@@ -52,7 +52,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 /* Close button */
@@ -62,21 +62,21 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #999999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
 }
 
 .keyboard-shortcuts-close:hover {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .keyboard-shortcuts-close:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
 }
 
 /* Content */
@@ -100,18 +100,18 @@
   gap: 1rem;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  background-color: #0f0f0f;
+  background-color: var(--bg-primary);
   transition: background-color 0.2s ease;
 }
 
 .keyboard-shortcut-item:hover {
-  background-color: #1f1f1f;
+  background-color: var(--bg-hover);
 }
 
 /* Description */
 .shortcut-description {
   font-size: 0.875rem;
-  color: #cccccc;
+  color: var(--text-secondary);
   flex: 1;
 }
 
@@ -137,11 +137,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  color: #d1d5db;
-  background-color: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
   border-radius: 0.375rem;
-  box-shadow: 0 2px 0 #1a1a1a;
+  box-shadow: 0 2px 0 var(--bg-secondary);
   min-width: 2rem;
   text-align: center;
   user-select: none;
@@ -149,29 +149,29 @@
 
 /* Highlighted key */
 .keyboard-key-highlight {
-  color: #6366f1;
-  background-color: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+  border-color: var(--color-primary-bg-hover);
 }
 
 /* Key plus separator */
 .key-plus {
   font-size: 0.75rem;
-  color: #666666;
+  color: var(--text-muted);
   margin: 0 0.25rem;
 }
 
 /* Footer */
 .keyboard-shortcuts-footer {
   padding-top: 1.5rem;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--border-secondary);
   text-align: center;
 }
 
 .keyboard-shortcuts-footer p {
   margin: 0;
   font-size: 0.875rem;
-  color: #808080;
+  color: var(--text-disabled);
 }
 
 /* Animations */
@@ -193,6 +193,24 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* Scrollbar styling */
+.keyboard-shortcuts-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-track {
+  background-color: var(--bg-secondary);
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.keyboard-shortcuts-modal::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* Responsive */
@@ -218,22 +236,4 @@
     width: 100%;
     justify-content: flex-start;
   }
-}
-
-/* Scrollbar styling */
-.keyboard-shortcuts-modal::-webkit-scrollbar {
-  width: 8px;
-}
-
-.keyboard-shortcuts-modal::-webkit-scrollbar-track {
-  background-color: #1a1a1a;
-}
-
-.keyboard-shortcuts-modal::-webkit-scrollbar-thumb {
-  background-color: #3a3a3a;
-  border-radius: 4px;
-}
-
-.keyboard-shortcuts-modal::-webkit-scrollbar-thumb:hover {
-  background-color: #4a4a4a;
 }
