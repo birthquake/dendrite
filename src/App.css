@@ -141,6 +141,50 @@ body {
   color: white;
 }
 
+/* USER PROFILE */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  margin-left: 12px;
+  border-left: 1px solid var(--bg-tertiary);
+}
+
+.user-email {
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-btn:hover {
+  background: var(--color-error);
+  color: white;
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
 /* MAIN CONTAINER */
 .main-container {
   display: flex;
@@ -376,6 +420,23 @@ body {
     font-size: clamp(11px, 1.8vw, 12px);
   }
 
+  .user-profile {
+    gap: 8px;
+    padding: 0 8px;
+    margin-left: 8px;
+    border-left: 1px solid var(--bg-tertiary);
+  }
+
+  .user-email {
+    display: none;
+  }
+
+  .logout-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
   .editor-empty {
     font-size: clamp(12px, 2.5vw, 14px);
     padding: clamp(12px, 4vw, 20px);
@@ -413,6 +474,18 @@ body {
   .view-toggle button {
     padding: clamp(5px, 0.8vw, 6px) clamp(8px, 1.2vw, 10px);
     font-size: clamp(10px, 1.5vw, 11px);
+  }
+
+  .user-profile {
+    gap: 6px;
+    padding: 0 6px;
+    margin-left: 6px;
+  }
+
+  .logout-btn {
+    padding: 3px 6px;
+    font-size: 10px;
+    min-height: 28px;
   }
 
   .main-container.sidebar-open .sidebar {
@@ -470,6 +543,18 @@ body {
     font-size: clamp(9px, 1.2vw, 10px);
     min-height: 40px;
     min-width: 40px;
+  }
+
+  .user-profile {
+    gap: 4px;
+    padding: 0 4px;
+    margin-left: 4px;
+  }
+
+  .logout-btn {
+    padding: 3px 5px;
+    font-size: 9px;
+    min-height: 26px;
   }
 
   .sidebar {
