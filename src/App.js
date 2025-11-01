@@ -300,6 +300,13 @@ function AppContent() {
     setIsMobileSidebarOpen(false);
   };
 
+  // Handle cancel from NoteEditor
+  const handleCancelEdit = () => {
+    setIsCreatingNewNote(false);
+    setSelectedNote(null);
+    setIsMobileSidebarOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -391,6 +398,7 @@ function AppContent() {
                   createNoteIfNotExists={createNoteIfNotExists}
                   allTags={getAllTags()}
                   onCreateNew={handleCreateNewNote}
+                  onCancel={handleCancelEdit}
                 />
               ) : (
                 <NoteEditor 
@@ -405,6 +413,7 @@ function AppContent() {
                   createNoteIfNotExists={createNoteIfNotExists}
                   allTags={getAllTags()}
                   onCreateNew={handleCreateNewNote}
+                  onCancel={handleCancelEdit}
                 />
               )}
             </div>
