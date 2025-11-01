@@ -9,10 +9,11 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
+import './styles/theme-variables.css';
+import './App.css';
 import { ToastProvider, useToast } from './components/toast/toast-provider';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CommandPalette } from './components/CommandPalette';
-import './App.css';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
 import Graph from './components/Graph';
