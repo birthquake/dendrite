@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Edit2, Copy, Trash2, Save, X } from 'lucide-react';
+import { Edit2, Copy, Trash2, Save, X, BookOpen, Plus } from 'lucide-react';
 import './NoteEditor.css';
 
 export function NoteEditor({
@@ -15,6 +15,7 @@ export function NoteEditor({
   createNoteIfNotExists,
   allTags,
   onSelectNote,
+  onCreateNew,
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -429,7 +430,6 @@ export function NoteEditor({
   return (
     <div className="note-editor">
       <div className="note-editor-empty">
-        <p className="note-editor-empty-title">Welcome to Dendrite</p>
         <div className="note-editor-empty-actions">
           <button 
             className="empty-action-btn empty-action-select"
@@ -442,14 +442,16 @@ export function NoteEditor({
             }}
             title="Open the note list"
           >
-            📋 Select a note
+            <BookOpen size={20} />
+            <span>Select a note</span>
           </button>
           <button 
             className="empty-action-btn empty-action-create"
-            onClick={() => onSelectNote(null)}
+            onClick={onCreateNew}
             title="Create a new note (Cmd+N)"
           >
-            ✨ Create a new one
+            <Plus size={20} />
+            <span>Create a new one</span>
           </button>
         </div>
       </div>
