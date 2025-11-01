@@ -573,20 +573,21 @@
     font-size: clamp(12px, 1.5vw, 13px);
   }
 
+  /* Keep input font-size >= 16px to prevent iOS auto-zoom */
   .note-title-input {
-    font-size: clamp(13px, 3vw, 16px);
+    font-size: clamp(16px, 3vw, 18px);
     min-height: 36px;
   }
 
   .note-content-input {
-    font-size: clamp(11px, 1.4vw, 13px);
+    font-size: clamp(16px, 2.2vw, 18px);
     min-height: 120px;
   }
 
   .note-tag-input,
   .note-tag-add-btn {
     min-height: 34px;
-    font-size: clamp(11px, 1.5vw, 12px);
+    font-size: 16px;
   }
 
   .note-tag-item {
@@ -642,25 +643,26 @@
     font-size: clamp(12px, 1.4vw, 13px);
   }
 
+  /* Keep input font-size >= 16px to prevent iOS auto-zoom */
   .note-title-input {
-    font-size: clamp(12px, 2.5vw, 14px);
+    font-size: 16px;
     min-height: 32px;
   }
 
   .note-content-input {
-    font-size: clamp(11px, 1.3vw, 12px);
+    font-size: 16px;
     min-height: 100px;
   }
 
   .note-tag-input {
     min-height: 32px;
-    font-size: clamp(10px, 1.3vw, 11px);
+    font-size: 16px;
   }
 
   .note-tag-add-btn {
     min-height: 32px;
     min-width: 36px;
-    font-size: clamp(10px, 1.3vw, 11px);
+    font-size: 16px;
   }
 }
 
@@ -697,19 +699,20 @@
     font-size: 14px;
   }
 
+  /* Keep input font-size >= 16px to prevent iOS auto-zoom */
   .note-title-input {
-    font-size: 12px;
+    font-size: 16px;
     min-height: 30px;
   }
 
   .note-content-input {
-    font-size: 11px;
+    font-size: 16px;
     min-height: 80px;
   }
 
   .note-tag-input,
   .note-tag-add-btn {
     min-height: 30px;
-    font-size: 10px;
+    font-size: 16px;
   }
 }
