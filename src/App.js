@@ -14,6 +14,7 @@ import './App.css';
 import { ToastProvider, useToast } from './components/toast/toast-provider';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CommandPalette } from './components/CommandPalette';
+import ThemeToggle from './components/ThemeToggle';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
 import Graph from './components/Graph';
@@ -312,21 +313,24 @@ function AppContent() {
       />
       <header className="header">
         <h1>🧠 Dendrite</h1>
-        <div className="view-toggle">
-          <button 
-            className={view === 'list' ? 'active' : ''} 
-            onClick={() => setView('list')}
-            title="List view"
-          >
-            List
-          </button>
-          <button 
-            className={view === 'graph' ? 'active' : ''} 
-            onClick={() => setView('graph')}
-            title="Graph view"
-          >
-            Graph
-          </button>
+        <div className="header-controls">
+          <ThemeToggle />
+          <div className="view-toggle">
+            <button 
+              className={view === 'list' ? 'active' : ''} 
+              onClick={() => setView('list')}
+              title="List view"
+            >
+              List
+            </button>
+            <button 
+              className={view === 'graph' ? 'active' : ''} 
+              onClick={() => setView('graph')}
+              title="Graph view"
+            >
+              Graph
+            </button>
+          </div>
         </div>
       </header>
       <div className="main-container">
