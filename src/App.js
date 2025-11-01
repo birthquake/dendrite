@@ -390,6 +390,7 @@ function AppContent() {
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
                   allTags={getAllTags()}
+                  onCreateNew={handleCreateNewNote}
                 />
               ) : (
                 <NoteEditor 
@@ -403,6 +404,7 @@ function AppContent() {
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
                   allTags={getAllTags()}
+                  onCreateNew={handleCreateNewNote}
                 />
               )}
             </div>
