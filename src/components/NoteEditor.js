@@ -429,7 +429,29 @@ export function NoteEditor({
   return (
     <div className="note-editor">
       <div className="note-editor-empty">
-        <p>Select a note or create a new one</p>
+        <p className="note-editor-empty-title">Welcome to Dendrite</p>
+        <div className="note-editor-empty-actions">
+          <button 
+            className="empty-action-btn empty-action-select"
+            onClick={() => {
+              // Trigger hamburger menu on mobile to show sidebar
+              const hamburger = document.querySelector('.hamburger-menu-btn');
+              if (hamburger) {
+                hamburger.click();
+              }
+            }}
+            title="Open the note list"
+          >
+            📋 Select a note
+          </button>
+          <button 
+            className="empty-action-btn empty-action-create"
+            onClick={() => onSelectNote(null)}
+            title="Create a new note (Cmd+N)"
+          >
+            ✨ Create a new one
+          </button>
+        </div>
       </div>
     </div>
   );
