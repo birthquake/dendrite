@@ -2,7 +2,7 @@
   display: flex;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   overflow: hidden;
 }
 
@@ -13,12 +13,12 @@
 
 .graph-svg circle {
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-base);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .graph-svg circle:hover {
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.6));
+  filter: drop-shadow(0 4px 12px var(--color-primary-bg));
 }
 
 .graph-svg line {
@@ -28,4 +28,5 @@
 .graph-svg text {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   font-weight: 500;
+  fill: var(--text-secondary);
 }
