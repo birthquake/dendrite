@@ -19,8 +19,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background-color: var(--overlay-dark);
+  backdrop-filter: var(--backdrop-blur);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -30,10 +30,10 @@
   width: 90%;
   max-width: 600px;
   max-height: 70vh;
-  background-color: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background-color: var(--bg-modal);
+  border: 1px solid var(--border-secondary);
   border-radius: 0.75rem;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-2xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -46,12 +46,12 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  border-bottom: 1px solid #2a2a2a;
-  background-color: #0f0f0f;
+  border-bottom: 1px solid var(--border-secondary);
+  background-color: var(--bg-primary);
 }
 
 .command-palette-search-icon {
-  color: #666666;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -60,13 +60,13 @@
   flex: 1;
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
   outline: none;
 }
 
 .command-palette-input::placeholder {
-  color: #666666;
+  color: var(--text-muted);
 }
 
 /* Clear Button */
@@ -76,17 +76,17 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #999999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
   flex-shrink: 0;
 }
 
 .command-palette-clear:hover {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 /* Results Container */
@@ -102,16 +102,16 @@
 }
 
 .command-palette-results::-webkit-scrollbar-track {
-  background-color: #1a1a1a;
+  background-color: var(--bg-modal);
 }
 
 .command-palette-results::-webkit-scrollbar-thumb {
-  background-color: #3a3a3a;
+  background-color: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 .command-palette-results::-webkit-scrollbar-thumb:hover {
-  background-color: #4a4a4a;
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* Command Palette Item */
@@ -119,16 +119,16 @@
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
-  border-bottom: 1px solid #0f0f0f;
+  border-bottom: 1px solid var(--bg-primary);
 }
 
 .command-palette-item:hover {
-  background-color: #242424;
+  background-color: var(--bg-hover);
 }
 
 .command-palette-item.selected {
-  background-color: #2a2a2a;
-  border-left: 3px solid #6366f1;
+  background-color: var(--bg-tertiary);
+  border-left: 3px solid var(--color-primary);
   padding-left: calc(1rem - 3px);
 }
 
@@ -136,14 +136,14 @@
 .command-palette-item-title {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 /* Item Preview */
 .command-palette-item-preview {
   font-size: 0.8rem;
-  color: #999999;
+  color: var(--text-muted);
   margin-bottom: 0.375rem;
   line-height: 1.4;
 }
@@ -159,8 +159,8 @@
 .command-palette-tag {
   display: inline-block;
   padding: 0.2rem 0.5rem;
-  background-color: #2a2a2a;
-  color: #999999;
+  background-color: var(--bg-tertiary);
+  color: var(--text-muted);
   font-size: 0.7rem;
   border-radius: 0.25rem;
   font-weight: 500;
@@ -169,7 +169,7 @@
 .command-palette-tag-more {
   display: inline-block;
   padding: 0.2rem 0.5rem;
-  color: #666666;
+  color: var(--text-placeholder);
   font-size: 0.7rem;
   font-weight: 500;
 }
@@ -178,7 +178,7 @@
 .command-palette-empty {
   padding: 2rem 1rem;
   text-align: center;
-  color: #666666;
+  color: var(--text-placeholder);
   font-size: 0.95rem;
 }
 
@@ -189,8 +189,8 @@
   justify-content: center;
   gap: 1.5rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid #2a2a2a;
-  background-color: #0f0f0f;
+  border-top: 1px solid var(--border-secondary);
+  background-color: var(--bg-primary);
   font-size: 0.75rem;
 }
 
@@ -199,19 +199,19 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  color: #666666;
+  color: var(--text-muted);
 }
 
 .command-palette-hint kbd {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  background-color: #2a2a2a;
-  border: 1px solid #3a3a3a;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
   border-radius: 0.25rem;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.7rem;
   font-weight: 500;
-  color: #999999;
+  color: var(--text-muted);
 }
 
 /* Animations */
