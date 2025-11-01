@@ -4,10 +4,9 @@
   box-sizing: border-box;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+html {
+  height: 100dvh;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -15,13 +14,25 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-secondary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Allow normal scrolling on mobile */
+  overflow-y: auto;
+  /* Account for safe areas (notches, home indicators) */
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-top: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+#root {
+  width: 100%;
+  height: 100%;
 }
 
 .App {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100%;
   background-color: var(--bg-primary);
   overflow: hidden;
 }
@@ -32,7 +43,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100dvh;
   background-color: var(--bg-primary);
   gap: 20px;
 }
@@ -63,43 +74,48 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding-left: max(24px, calc(env(safe-area-inset-left) + 8px));
+  padding-right: max(24px, calc(env(safe-area-inset-right) + 8px));
+  padding-top: 16px;
+  padding-bottom: 16px;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  gap: 16px;
+  gap: clamp(8px, 2vw, 16px);
   flex-shrink: 0;
   z-index: 70;
-  min-height: 64px;
+  min-height: clamp(52px, 12vw, 64px);
 }
 
 .header h1 {
-  font-size: 24px;
+  font-size: clamp(18px, 5vw, 24px);
   font-weight: 700;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
 /* HEADER CONTROLS */
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: clamp(6px, 1.5vw, 12px);
   margin-left: auto;
+  flex-wrap: wrap;
 }
 
 .view-toggle {
   display: flex;
-  gap: 8px;
+  gap: clamp(4px, 1vw, 8px);
   background-color: var(--bg-tertiary);
-  padding: 4px;
+  padding: clamp(3px, 1vw, 4px);
   border-radius: 6px;
 }
 
 .view-toggle button {
-  padding: 8px 16px;
+  padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px);
   background-color: transparent;
   color: var(--text-tertiary);
   border: none;
@@ -107,7 +123,13 @@ body {
   cursor: pointer;
   font-weight: 500;
   transition: var(--transition-fast);
-  font-size: 14px;
+  font-size: clamp(12px, 2vw, 14px);
+  /* Minimum 44px touch target */
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .view-toggle button:hover {
@@ -146,6 +168,8 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
 }
 
 .editor-empty {
@@ -154,9 +178,9 @@ body {
   justify-content: center;
   height: 100%;
   color: var(--text-tertiary);
-  font-size: 16px;
+  font-size: clamp(14px, 3vw, 16px);
   text-align: center;
-  padding: 40px;
+  padding: clamp(16px, 5vw, 40px);
 }
 
 /* SCROLLBARS */
@@ -180,12 +204,16 @@ body {
 /* TOAST NOTIFICATIONS CUSTOMIZATION */
 .Toastify__toast-container {
   z-index: 999;
+  /* Safe area aware positioning */
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
 }
 
 .Toastify__toast {
   border-radius: 6px;
   font-family: inherit;
   box-shadow: var(--shadow-lg);
+  min-height: 44px;
 }
 
 .Toastify__toast--success {
@@ -203,6 +231,7 @@ body {
 .Toastify__toast-body {
   color: white;
   font-weight: 500;
+  font-size: clamp(13px, 2vw, 14px);
 }
 
 .Toastify__progress-bar {
@@ -261,6 +290,15 @@ body {
 /* ===== TABLET & MOBILE: Show editor by default (<=768px) ===== */
 
 @media (max-width: 768px) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  .App {
+    height: 100dvh;
+  }
+
   .main-container {
     flex-direction: row;
     position: relative;
@@ -278,6 +316,8 @@ body {
     width: 100%;
     position: relative;
     z-index: 30;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   /* WHEN SIDEBAR IS OPEN: SHOW SIDEBAR, HIDE EDITOR */
@@ -286,12 +326,12 @@ body {
     flex-direction: column;
     position: fixed;
     left: 0;
-    top: 64px;
+    top: clamp(52px, 12vw, 64px);
     bottom: 0;
-    width: 80%;
-    max-width: 300px;
+    width: clamp(70vw, 85%, 300px);
     z-index: 50;
     border-right: 1px solid var(--border-primary);
+    padding-left: max(0px, env(safe-area-inset-left));
   }
 
   .main-container.sidebar-open .editor {
@@ -306,7 +346,7 @@ body {
   .main-container.sidebar-open .mobile-sidebar-overlay {
     display: block;
     position: fixed;
-    top: 64px;
+    top: clamp(52px, 12vw, 64px);
     left: 0;
     right: 0;
     bottom: 0;
@@ -314,24 +354,40 @@ body {
   }
 
   .header {
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-start;
-    min-height: 56px;
-    padding: 12px 16px;
+    min-height: clamp(52px, 12vw, 56px);
+    gap: clamp(6px, 1.5vw, 12px);
   }
 
   .header h1 {
-    font-size: 20px;
+    font-size: clamp(16px, 4.5vw, 20px);
   }
 
   .header-controls {
-    width: 100%;
-    margin-left: 0;
+    gap: clamp(4px, 1vw, 8px);
   }
 
   .view-toggle {
-    flex: 1;
+    gap: clamp(3px, 0.8vw, 6px);
+    padding: clamp(2px, 0.8vw, 3px);
+  }
+
+  .view-toggle button {
+    padding: clamp(5px, 1vw, 6px) clamp(8px, 1.5vw, 12px);
+    font-size: clamp(11px, 1.8vw, 12px);
+  }
+
+  .editor-empty {
+    font-size: clamp(12px, 2.5vw, 14px);
+    padding: clamp(12px, 4vw, 20px);
+  }
+
+  .Toastify__toast-container {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .Toastify__toast {
+    font-size: clamp(12px, 2vw, 13px);
   }
 }
 
@@ -339,75 +395,159 @@ body {
 
 @media (max-width: 640px) {
   .header {
-    padding: 12px 16px;
-    min-height: 56px;
+    padding-left: max(16px, calc(env(safe-area-inset-left) + 4px));
+    padding-right: max(16px, calc(env(safe-area-inset-right) + 4px));
+    padding-top: 12px;
+    padding-bottom: 12px;
+    min-height: clamp(48px, 11vw, 56px);
   }
 
   .header h1 {
-    font-size: 18px;
+    font-size: clamp(16px, 4vw, 18px);
   }
 
   .header-controls {
-    gap: 8px;
-  }
-
-  .view-toggle {
-    padding: 3px;
+    gap: clamp(4px, 0.8vw, 8px);
   }
 
   .view-toggle button {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: clamp(5px, 0.8vw, 6px) clamp(8px, 1.2vw, 10px);
+    font-size: clamp(10px, 1.5vw, 11px);
   }
 
   .main-container.sidebar-open .sidebar {
-    top: 56px;
-    width: 85%;
+    top: clamp(48px, 11vw, 56px);
+    width: clamp(75vw, 90%, 280px);
   }
 
   .mobile-sidebar-overlay {
-    top: 56px;
+    top: clamp(48px, 11vw, 56px);
   }
 
   .editor-empty {
-    font-size: 14px;
-    padding: 20px;
+    font-size: clamp(12px, 2vw, 13px);
+    padding: clamp(10px, 3vw, 16px);
+  }
+
+  .Toastify__toast-container {
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
 
 /* ===== SMALL MOBILE (480px) ===== */
 
 @media (max-width: 480px) {
+  body {
+    padding-left: max(4px, env(safe-area-inset-left));
+    padding-right: max(4px, env(safe-area-inset-right));
+  }
+
   .header {
-    padding: 10px 12px;
-    gap: 8px;
-    min-height: 52px;
+    padding-left: max(12px, calc(env(safe-area-inset-left) + 2px));
+    padding-right: max(12px, calc(env(safe-area-inset-right) + 2px));
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-height: clamp(44px, 10vw, 52px);
+    gap: clamp(3px, 0.6vw, 6px);
   }
 
   .header h1 {
-    font-size: 16px;
+    font-size: clamp(14px, 3.5vw, 16px);
   }
 
   .header-controls {
-    gap: 6px;
+    gap: clamp(2px, 0.5vw, 4px);
+  }
+
+  .view-toggle {
+    padding: clamp(1px, 0.5vw, 2px);
+    gap: clamp(2px, 0.4vw, 4px);
   }
 
   .view-toggle button {
-    padding: 5px 10px;
-    font-size: 11px;
+    padding: clamp(4px, 0.6vw, 5px) clamp(6px, 1vw, 8px);
+    font-size: clamp(9px, 1.2vw, 10px);
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .sidebar {
+    font-size: clamp(12px, 1.8vw, 13px);
   }
 
   .main-container.sidebar-open .sidebar {
-    width: 90%;
-    top: 52px;
+    top: clamp(44px, 10vw, 52px);
+    width: clamp(80vw, 95%, 260px);
   }
 
   .mobile-sidebar-overlay {
-    top: 52px;
+    top: clamp(44px, 10vw, 52px);
   }
 
   .editor-empty {
-    font-size: 12px;
-    padding: 16px;
+    font-size: clamp(11px, 1.8vw, 12px);
+    padding: clamp(8px, 2vw, 12px);
+  }
+
+  .Toastify__toast-container {
+    right: max(4px, env(safe-area-inset-right));
+    bottom: max(4px, env(safe-area-inset-bottom));
+  }
+
+  .Toastify__toast {
+    font-size: clamp(11px, 1.5vw, 12px);
+    min-height: 40px;
+  }
+
+  .Toastify__toast-body {
+    font-size: clamp(11px, 1.5vw, 12px);
+  }
+}
+
+/* ===== EXTRA SMALL (320px) ===== */
+
+@media (max-width: 360px) {
+  body {
+    padding-left: max(2px, env(safe-area-inset-left));
+    padding-right: max(2px, env(safe-area-inset-right));
+  }
+
+  .header {
+    padding-left: max(8px, calc(env(safe-area-inset-left) + 0px));
+    padding-right: max(8px, calc(env(safe-area-inset-right) + 0px));
+    padding-top: 8px;
+    padding-bottom: 8px;
+    min-height: clamp(40px, 9vw, 48px);
+    gap: 3px;
+  }
+
+  .header h1 {
+    font-size: clamp(13px, 3vw, 14px);
+  }
+
+  .header-controls {
+    gap: 2px;
+  }
+
+  .view-toggle {
+    padding: 1px;
+    gap: 2px;
+  }
+
+  .view-toggle button {
+    padding: clamp(3px, 0.4vw, 4px) clamp(5px, 0.8vw, 6px);
+    font-size: clamp(8px, 1vw, 9px);
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  .editor-empty {
+    font-size: clamp(10px, 1.5vw, 11px);
+    padding: clamp(6px, 1.5vw, 8px);
+  }
+
+  .main-container.sidebar-open .sidebar {
+    width: 85vw;
   }
 }
