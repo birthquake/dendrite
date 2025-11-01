@@ -1,715 +1,436 @@
 import { useState, useEffect, useRef } from 'react';
-import { useToast } from './toast/toast-provider';
-import { formatTimeSince } from '../utils/timeFormatter';
+import { Edit2, Copy, Trash2, Save, X } from 'lucide-react';
 import './NoteEditor.css';
-import DeleteConfirmModal from './DeleteConfirmModal';
 
-function NoteEditor({ 
-  note, 
-  allNotes = [], 
-  onCreate, 
-  onSave, 
+export function NoteEditor({
+  note,
+  allNotes,
+  onCreate,
+  onSave,
   onDelete,
   onDuplicate,
-  onSelectNote,
-  isCreatingNewNote = false,
+  isCreatingNewNote,
   getNoteByTitle,
   getBacklinks,
   createNoteIfNotExists,
-  allTags = []
+  allTags,
+  onSelectNote,
 }) {
-  const toast = useToast();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isEditing, setIsEditing] = useState(!note);
-  const [linkedNotes, setLinkedNotes] = useState([]);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
-  const [tagSuggestions, setTagSuggestions] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
-  // Auto-save state
-  const [lastSavedTime, setLastSavedTime] = useState(null);
-  const [displayedTime, setDisplayedTime] = useState(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [hasAutoSavedOnce, setHasAutoSavedOnce] = useState(false);
-  const autoSaveIntervalRef = useRef(null);
-  const timeUpdateIntervalRef = useRef(null);
-  
-  // Autocomplete state
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [autocompleteResults, setAutocompleteResults] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [cursorPos, setCursorPos] = useState(0);
-  const textareaRef = useRef(null);
+  const [isEditing, setIsEditing] = useState(isCreatingNewNote);
+  const [linkedNotes, setLinkedNotes] = useState([]);
+  const [backlinks, setBacklinks] = useState([]);
+  const [autocompleteMatches, setAutocompleteMatches] = useState([]);
+  const [autocompleteIndex, setAutocompleteIndex] = useState(0);
+  const contentRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const [lastSaved, setLastSaved] = useState(null);
+  const autoSaveTimeoutRef = useRef(null);
 
-  // Hover preview state
-  const [hoveredLinkTitle, setHoveredLinkTitle] = useState(null);
-  const [hoverPreviewPos, setHoverPreviewPos] = useState({ x: 0, y: 0 });
-
+  // Initialize form with note data
   useEffect(() => {
     if (note) {
-      setTitle(note.title || '');
-      setContent(note.content || '');
-      setLinkedNotes(note.linkedNotes || []);
+      setTitle(note.title);
+      setContent(note.content);
       setTags(note.tags || []);
+      setLinkedNotes(note.linkedNotes || []);
+      setBacklinks(getBacklinks(note.id));
       setIsEditing(false);
-      setLastSavedTime(new Date());
-      setHasUnsavedChanges(false);
-      setHasAutoSavedOnce(false);
     } else if (isCreatingNewNote) {
       setTitle('');
       setContent('');
-      setLinkedNotes([]);
       setTags([]);
-      setIsEditing(true);
-      setLastSavedTime(null);
-      setHasUnsavedChanges(false);
-      setHasAutoSavedOnce(false);
-    } else {
-      setTitle('');
-      setContent('');
       setLinkedNotes([]);
-      setTags([]);
+      setBacklinks([]);
       setIsEditing(true);
-      setLastSavedTime(null);
-      setHasUnsavedChanges(false);
-      setHasAutoSavedOnce(false);
     }
-    
-    setHoveredLinkTitle(null);
-    setTagInput('');
-    setShowTagSuggestions(false);
-  }, [note, isCreatingNewNote]);
+  }, [note, isCreatingNewNote, getBacklinks]);
 
-  // Auto-save interval
+  // Auto-save while editing
   useEffect(() => {
-    if (!isEditing) {
-      if (autoSaveIntervalRef.current) {
-        clearInterval(autoSaveIntervalRef.current);
+    if (isEditing && note) {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
       }
+
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        onSave(note.id, title, content, linkedNotes, tags);
+        setLastSaved(new Date());
+      }, 2000);
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [content, title, tags, isEditing, note, linkedNotes, onSave]);
+
+  // Listen for save keyboard shortcut
+  useEffect(() => {
+    const handleSave = () => {
+      if (isEditing) {
+        handleSaveNote();
+      }
+    };
+
+    window.addEventListener('save-note', handleSave);
+    return () => window.removeEventListener('save-note', handleSave);
+  }, [isEditing, title, content, linkedNotes, tags, note]);
+
+  const handleSaveNote = async () => {
+    if (!title.trim()) {
+      alert('Please enter a note title');
       return;
     }
 
-    const performAutoSave = async () => {
-      // Only auto-save if there are unsaved changes
-      if (!hasUnsavedChanges) return;
+    if (isCreatingNewNote && !onCreate) {
+      alert('onCreate handler not found');
+      return;
+    }
 
-      // Don't auto-save if title or content is empty
-      if (!title.trim() || !content.trim()) return;
+    if (isCreatingNewNote) {
+      await onCreate(title, content, tags);
+    } else if (note) {
+      await onSave(note.id, title, content, linkedNotes, tags);
+    }
 
-      try {
-        const extractedLinkedNotes = extractLinkedNoteIds(content);
+    setIsEditing(false);
+  };
 
-        if (note) {
-          // Auto-save existing note
-          await onSave(note.id, title, content, extractedLinkedNotes, tags);
-        } else {
-          // Auto-save new note
-          await onCreate(title, content, tags);
-        }
-
-        setLastSavedTime(new Date());
-        setHasUnsavedChanges(false);
-
-        // Show toast only on first auto-save
-        if (!hasAutoSavedOnce) {
-          toast.success('Note auto-saved');
-          setHasAutoSavedOnce(true);
-        }
-      } catch (error) {
-        // Silently fail on auto-save errors
-        console.error('Auto-save failed:', error);
-      }
-    };
-
-    autoSaveIntervalRef.current = setInterval(performAutoSave, 5000);
-
-    return () => {
-      if (autoSaveIntervalRef.current) {
-        clearInterval(autoSaveIntervalRef.current);
-      }
-    };
-  }, [isEditing, hasUnsavedChanges, title, content, tags, note, onSave, onCreate, hasAutoSavedOnce, toast]);
-
-  // Update displayed time every second
-  useEffect(() => {
-    if (!lastSavedTime) return;
-
-    const updateDisplayedTime = () => {
-      setDisplayedTime(formatTimeSince(lastSavedTime));
-    };
-
-    updateDisplayedTime();
-    timeUpdateIntervalRef.current = setInterval(updateDisplayedTime, 1000);
-
-    return () => {
-      if (timeUpdateIntervalRef.current) {
-        clearInterval(timeUpdateIntervalRef.current);
-      }
-    };
-  }, [lastSavedTime]);
-
-  // Listen for keyboard shortcuts (Esc to cancel, and custom save event)
-  useEffect(() => {
-    const handleCancelShortcut = (e) => {
-      if (e.key === 'Escape' && isEditing) {
-        if (note) {
-          setIsEditing(false);
-        }
-      }
-    };
-
-    const handleCustomSave = () => {
-      if (isEditing) {
-        handleSave();
-      }
-    };
-
-    window.addEventListener('keydown', handleCancelShortcut);
-    window.addEventListener('save-note', handleCustomSave);
-
-    return () => {
-      window.removeEventListener('keydown', handleCancelShortcut);
-      window.removeEventListener('save-note', handleCustomSave);
-    };
-  }, [isEditing, note, title, content, tags]);
-
-  // ===== TAG LOGIC =====
-
-  const handleTagInput = (e) => {
-    const value = e.target.value;
-    setTagInput(value);
-
-    if (value.trim()) {
-      const filtered = allTags.filter(tag =>
-        tag.toLowerCase().includes(value.toLowerCase()) && !tags.includes(tag)
-      );
-      setTagSuggestions(filtered);
-      setShowTagSuggestions(true);
+  const handleCancel = () => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setTags(note.tags || []);
+      setLinkedNotes(note.linkedNotes || []);
     } else {
-      setShowTagSuggestions(false);
+      setTitle('');
+      setContent('');
+      setTags([]);
+      setLinkedNotes([]);
     }
+    setIsEditing(false);
   };
-
-  const addTag = (tagName) => {
-    const trimmedTag = tagName.trim().toLowerCase();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
-      setHasUnsavedChanges(true);
-    }
-    setTagInput('');
-    setShowTagSuggestions(false);
-  };
-
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-    setHasUnsavedChanges(true);
-  };
-
-  const handleTagKeyDown = (e) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      addTag(tagInput);
-    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
-      removeTag(tags[tags.length - 1]);
-    }
-  };
-
-  // ===== END TAG LOGIC =====
-
-  // ===== AUTOCOMPLETE LOGIC =====
 
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setContent(newContent);
-    setHasUnsavedChanges(true);
-    setCursorPos(e.target.selectionStart);
 
-    const textBeforeCursor = newContent.substring(0, e.target.selectionStart);
-    const lastBracketIndex = textBeforeCursor.lastIndexOf('[[');
-    
-    if (lastBracketIndex !== -1) {
-      const textAfterLastBracket = textBeforeCursor.substring(lastBracketIndex + 2);
-      
-      if (!textAfterLastBracket.includes(']]')) {
-        setSearchTerm(textAfterLastBracket);
-        filterNotesForAutocomplete(textAfterLastBracket);
-        setShowAutocomplete(true);
+    // Check for [[ to trigger autocomplete
+    const lastBracketIndex = newContent.lastIndexOf('[[');
+    const lastCloseBracketIndex = newContent.lastIndexOf(']]');
+
+    if (lastBracketIndex > lastCloseBracketIndex) {
+      const searchText = newContent.substring(lastBracketIndex + 2).split(']]')[0];
+      if (searchText.length > 0) {
+        const matches = allNotes
+          .filter(
+            (n) =>
+              n.title.toLowerCase().includes(searchText.toLowerCase()) &&
+              n.id !== note?.id
+          )
+          .slice(0, 5);
+        setAutocompleteMatches(matches);
+        setAutocompleteIndex(0);
       } else {
-        setShowAutocomplete(false);
+        setAutocompleteMatches([]);
       }
     } else {
-      setShowAutocomplete(false);
+      setAutocompleteMatches([]);
     }
   };
 
-  const filterNotesForAutocomplete = (search) => {
-    if (!search.trim()) {
-      setAutocompleteResults(allNotes);
-      return;
-    }
-
-    const filtered = allNotes.filter(n =>
-      n.title.toLowerCase().includes(search.toLowerCase())
-    );
-    setAutocompleteResults(filtered);
-  };
-
-  const insertLink = async (noteTitleToLink) => {
-    if (!textareaRef.current) return;
-
-    const textBeforeCursor = content.substring(0, cursorPos);
-    const lastBracketIndex = textBeforeCursor.lastIndexOf('[[');
-
-    if (lastBracketIndex === -1) return;
-
-    let linkNoteId = null;
-    const existingNote = getNoteByTitle(noteTitleToLink);
-    
-    if (existingNote) {
-      linkNoteId = existingNote.id;
-    } else {
-      linkNoteId = await createNoteIfNotExists(noteTitleToLink);
-    }
-
-    const beforeLink = content.substring(0, lastBracketIndex);
-    const afterLink = content.substring(cursorPos);
-    const newContent = beforeLink + '[[' + noteTitleToLink + ']]' + afterLink;
-
+  const insertLink = (noteName) => {
+    const lastBracketIndex = content.lastIndexOf('[[');
+    const before = content.substring(0, lastBracketIndex);
+    const after = content.substring(content.indexOf(']]', lastBracketIndex) + 2);
+    const newContent = `${before}[[${noteName}]]${after}`;
     setContent(newContent);
-    setHasUnsavedChanges(true);
+    setAutocompleteMatches([]);
 
-    if (linkNoteId && !linkedNotes.includes(linkNoteId)) {
-      setLinkedNotes([...linkedNotes, linkNoteId]);
+    // Update linked notes
+    const linkedNote = getNoteByTitle(noteName);
+    if (linkedNote && !linkedNotes.includes(linkedNote.id)) {
+      setLinkedNotes([...linkedNotes, linkedNote.id]);
     }
-
-    setShowAutocomplete(false);
-    setSearchTerm('');
-
-    setTimeout(() => {
-      if (textareaRef.current) {
-        const newCursorPos = beforeLink.length + 2 + noteTitleToLink.length + 2;
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-      }
-    }, 0);
   };
 
-  // ===== END AUTOCOMPLETE LOGIC =====
-
-  // ===== LINK PARSING AND RENDERING =====
-
-  const renderContentWithLinks = () => {
-    const linkRegex = /\[\[([^\]]+)\]\]/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = linkRegex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({
-          type: 'text',
-          content: content.substring(lastIndex, match.index)
-        });
-      }
-
-      const linkTitle = match[1];
-      const linkedNote = getNoteByTitle(linkTitle);
-
-      parts.push({
-        type: 'link',
-        title: linkTitle,
-        noteExists: !!linkedNote,
-        noteId: linkedNote?.id,
-        notePreview: linkedNote?.content || ''
-      });
-
-      lastIndex = match.index + match[0].length;
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
     }
+  };
 
-    if (lastIndex < content.length) {
-      parts.push({
-        type: 'text',
-        content: content.substring(lastIndex)
-      });
-    }
+  const handleRemoveTag = (tagToRemove) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
 
-    return parts.map((part, idx) => {
-      if (part.type === 'text') {
-        return <span key={idx}>{part.content}</span>;
-      } else if (part.type === 'link') {
-        return (
-          <span
-            key={idx}
-            className={`note-link ${!part.noteExists ? 'broken-link' : ''}`}
-            onClick={() => {
-              if (part.noteExists && onSelectNote) {
-                const noteToSelect = allNotes.find(n => n.id === part.noteId);
-                onSelectNote(noteToSelect);
-              }
-            }}
-            onMouseEnter={(e) => {
-              setHoveredLinkTitle(part.title);
-              setHoverPreviewPos({
-                x: e.clientX,
-                y: e.clientY
-              });
-            }}
-            onMouseLeave={() => setHoveredLinkTitle(null)}
-          >
-            {part.title}
-          </span>
+  const handleContentKeyDown = (e) => {
+    if (autocompleteMatches.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setAutocompleteIndex(
+          (autocompleteIndex + 1) % autocompleteMatches.length
         );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setAutocompleteIndex(
+          (autocompleteIndex - 1 + autocompleteMatches.length) %
+            autocompleteMatches.length
+        );
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        insertLink(autocompleteMatches[autocompleteIndex].title);
+      } else if (e.key === 'Escape') {
+        setAutocompleteMatches([]);
       }
-    });
+    }
   };
 
-  // ===== END LINK PARSING =====
-
-  // ===== BACKLINKS SECTION =====
-
-  const renderBacklinks = () => {
-    if (!note) return null;
-
-    const backlinks = getBacklinks(note.id);
-
-    if (backlinks.length === 0) {
-      return null;
-    }
+  // View mode
+  if (!isEditing && note) {
+    const linkedNotesData = note.linkedNotes
+      ? note.linkedNotes.map((id) => allNotes.find((n) => n.id === id)).filter(Boolean)
+      : [];
 
     return (
-      <div className="backlinks-section">
-        <h3>Linked from {backlinks.length} note{backlinks.length !== 1 ? 's' : ''}</h3>
-        <div className="backlinks-container">
-          {backlinks.map(backlink => (
-            <div
-              key={backlink.id}
-              className="backlink-item"
-              onClick={() => onSelectNote(backlink)}
+      <div className="note-editor">
+        {/* Icon Button Header */}
+        <div className="note-editor-header">
+          <div className="note-editor-actions">
+            <button
+              className="icon-button icon-button-edit"
+              onClick={() => setIsEditing(true)}
+              title="Edit note (Cmd+E)"
+              aria-label="Edit note"
             >
-              <div className="backlink-title">{backlink.title}</div>
-              <div className="backlink-preview">
-                {backlink.content?.substring(0, 60)}...
+              <Edit2 size={20} />
+            </button>
+            <button
+              className="icon-button icon-button-duplicate"
+              onClick={() => onDuplicate(note.id)}
+              title="Duplicate note"
+              aria-label="Duplicate note"
+            >
+              <Copy size={20} />
+            </button>
+            <button
+              className="icon-button icon-button-delete"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'Are you sure you want to delete this note? This cannot be undone.'
+                  )
+                ) {
+                  onDelete(note.id);
+                }
+              }}
+              title="Delete note"
+              aria-label="Delete note"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Note Content */}
+        <div className="note-editor-content">
+          <h1 className="note-title">{note.title}</h1>
+
+          {note.tags && note.tags.length > 0 && (
+            <div className="note-tags-view">
+              {note.tags.map((tag) => (
+                <span key={tag} className="note-tag-badge">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {lastSaved && (
+            <p className="note-last-saved">
+              Last saved {new Date(lastSaved).toLocaleTimeString()}
+            </p>
+          )}
+
+          <div className="note-content-view">
+            {note.content.split('\n').map((paragraph, idx) => (
+              <p key={idx}>{paragraph || <br />}</p>
+            ))}
+          </div>
+
+          {linkedNotesData.length > 0 && (
+            <div className="note-linked-section">
+              <h3>Linked Notes</h3>
+              <div className="note-linked-list">
+                {linkedNotesData.map((linkedNote) => (
+                  <button
+                    key={linkedNote.id}
+                    className="note-link-item"
+                    onClick={() => onSelectNote(linkedNote)}
+                  >
+                    {linkedNote.title}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {backlinks.length > 0 && (
+            <div className="note-backlinks-section">
+              <h3>Backlinks</h3>
+              <div className="note-backlinks-list">
+                {backlinks.map((backlink) => (
+                  <button
+                    key={backlink.id}
+                    className="note-backlink-item"
+                    onClick={() => onSelectNote(backlink)}
+                  >
+                    {backlink.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
-  };
-
-  // ===== END BACKLINKS SECTION =====
-
-  const extractLinkedNoteIds = (content) => {
-    const linkRegex = /\[\[([^\]]+)\]\]/g;
-    const linkedNoteIds = [];
-    let match;
-
-    while ((match = linkRegex.exec(content)) !== null) {
-      const linkTitle = match[1];
-      const linkedNote = getNoteByTitle(linkTitle);
-      if (linkedNote && !linkedNoteIds.includes(linkedNote.id)) {
-        linkedNoteIds.push(linkedNote.id);
-      }
-    }
-
-    return linkedNoteIds;
-  };
-
-  const getCreatedTime = () => {
-    if (!note) return null;
-    const createdDate = note.createdAt?.toDate?.() || new Date(note.createdAt);
-    if (!createdDate || isNaN(createdDate.getTime())) {
-      return null;
-    }
-    return formatTimeSince(createdDate);
-  };
-
-  const getModifiedTime = () => {
-    if (!note) return null;
-    const modifiedDate = note.updatedAt?.toDate?.() || note.updatedAt || note.createdAt?.toDate?.() || new Date(note.createdAt);
-    if (!modifiedDate || isNaN(modifiedDate.getTime())) {
-      return null;
-    }
-    return formatTimeSince(modifiedDate);
-  };
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      toast.error('Note title cannot be empty', 3000);
-      return;
-    }
-
-    if (!content.trim()) {
-      toast.error('Note content cannot be empty', 3000);
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      if (note) {
-        await onSave(note.id, title, content, linkedNotes, tags);
-      } else {
-        await onCreate(title, content, tags);
-        setTitle('');
-        setContent('');
-        setLinkedNotes([]);
-        setTags([]);
-      }
-      setIsEditing(false);
-      setLastSavedTime(new Date());
-      setHasUnsavedChanges(false);
-      setHasAutoSavedOnce(false);
-    } catch (error) {
-      toast.error('Failed to save note');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    setShowDeleteModal(false);
-    setIsSaving(true);
-
-    try {
-      await onDelete(note.id);
-    } catch (error) {
-      toast.error('Failed to delete note');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDuplicate = async () => {
-    setIsSaving(true);
-    try {
-      await onDuplicate(note.id);
-    } catch (error) {
-      toast.error('Failed to duplicate note');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (!note && !isEditing && !isCreatingNewNote) {
-    return <div className="editor-empty">Select a note or create a new one</div>;
   }
 
-  return (
-    <div className="note-editor">
-      {showDeleteModal && (
-        <DeleteConfirmModal
-          noteTitle={title}
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
-        />
-      )}
+  // Edit/Create mode
+  if (isEditing || isCreatingNewNote) {
+    return (
+      <div className="note-editor">
+        {/* Save/Cancel Header */}
+        <div className="note-editor-header">
+          <div className="note-editor-actions">
+            <button
+              className="icon-button icon-button-save"
+              onClick={handleSaveNote}
+              title="Save note (Cmd+S)"
+              aria-label="Save note"
+            >
+              <Save size={20} />
+            </button>
+            <button
+              className="icon-button icon-button-cancel"
+              onClick={handleCancel}
+              title="Cancel editing (Esc)"
+              aria-label="Cancel editing"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
 
-      {isEditing ? (
-        <>
+        {/* Edit Form */}
+        <div className="note-editor-form">
           <input
             type="text"
-            className="editor-title"
+            className="note-title-input"
             placeholder="Note title..."
             value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              setHasUnsavedChanges(true);
-            }}
+            onChange={(e) => setTitle(e.target.value)}
             autoFocus
-            disabled={isSaving}
           />
 
-          {/* AUTO-SAVE INDICATOR */}
-          {displayedTime && (
-            <div className="auto-save-indicator">
-              {displayedTime}
-            </div>
-          )}
-
-          {/* TAG INPUT */}
-          <div className="tag-input-container">
-            <div className="tags-display">
-              {tags.map(tag => (
-                <div key={tag} className="tag-chip">
-                  {tag}
-                  <button
-                    className="tag-remove"
-                    onClick={() => removeTag(tag)}
-                    disabled={isSaving}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="tag-input-wrapper">
+          <div className="note-tags-section">
+            <div className="note-tags-input-group">
               <input
                 type="text"
-                className="tag-input"
+                className="note-tag-input"
                 placeholder="Add tags..."
                 value={tagInput}
-                onChange={handleTagInput}
-                onKeyDown={handleTagKeyDown}
-                disabled={isSaving}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                list="tag-suggestions"
               />
-              {showTagSuggestions && tagSuggestions.length > 0 && (
-                <div className="tag-suggestions">
-                  {tagSuggestions.map(tag => (
-                    <div
-                      key={tag}
-                      className="tag-suggestion-item"
-                      onClick={() => addTag(tag)}
-                    >
-                      {tag}
-                    </div>
+              <datalist id="tag-suggestions">
+                {allTags
+                  .filter(
+                    (tag) =>
+                      !tags.includes(tag) &&
+                      tag.toLowerCase().includes(tagInput.toLowerCase())
+                  )
+                  .map((tag) => (
+                    <option key={tag} value={tag} />
                   ))}
-                </div>
-              )}
+              </datalist>
+              <button
+                type="button"
+                className="note-tag-add-btn"
+                onClick={handleAddTag}
+              >
+                Add
+              </button>
             </div>
+
+            {tags.length > 0 && (
+              <div className="note-tags-list">
+                {tags.map((tag) => (
+                  <span key={tag} className="note-tag-item">
+                    {tag}
+                    <button
+                      type="button"
+                      className="note-tag-remove-btn"
+                      onClick={() => handleRemoveTag(tag)}
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="editor-textarea-wrapper">
+          <div className="note-content-input-wrapper">
             <textarea
-              ref={textareaRef}
-              className="editor-content"
-              placeholder="Start writing... Type [[ to link notes"
+              ref={contentRef}
+              className="note-content-input"
+              placeholder="Start typing... Use [[note-name]] to link to other notes"
               value={content}
               onChange={handleContentChange}
-              disabled={isSaving}
+              onKeyDown={handleContentKeyDown}
             />
-            
-            {showAutocomplete && (
-              <div className="autocomplete-dropdown">
-                {autocompleteResults.length > 0 ? (
-                  autocompleteResults.map(resultNote => (
-                    <div
-                      key={resultNote.id}
-                      className="autocomplete-item"
-                      onClick={() => insertLink(resultNote.title)}
-                    >
-                      <span className="autocomplete-title">{resultNote.title}</span>
-                      <span className="autocomplete-preview">
-                        {resultNote.content?.substring(0, 30)}...
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div
-                    className="autocomplete-item autocomplete-create"
-                    onClick={() => insertLink(searchTerm)}
+
+            {autocompleteMatches.length > 0 && (
+              <div className="autocomplete-dropdown" ref={autocompleteRef}>
+                {autocompleteMatches.map((match, idx) => (
+                  <button
+                    key={match.id}
+                    className={`autocomplete-item ${
+                      idx === autocompleteIndex ? 'selected' : ''
+                    }`}
+                    onClick={() => insertLink(match.title)}
                   >
-                    <span className="autocomplete-title">+ Create "{searchTerm}"</span>
-                  </div>
-                )}
+                    {match.title}
+                  </button>
+                ))}
               </div>
             )}
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="editor-actions">
-            <button 
-              className="save-btn" 
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Saving...' : 'Save (Ctrl+S)'}
-            </button>
-            {note && (
-              <button 
-                className="cancel-btn" 
-                onClick={() => setIsEditing(false)}
-                disabled={isSaving}
-              >
-                Cancel (Esc)
-              </button>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="note-header">
-            <h1>{title}</h1>
-            <div className="note-actions">
-              <button 
-                className="edit-btn" 
-                onClick={() => setIsEditing(true)}
-                disabled={isSaving}
-              >
-                Edit
-              </button>
-              <button 
-                className="duplicate-btn" 
-                onClick={handleDuplicate}
-                disabled={isSaving}
-                title="Duplicate this note"
-              >
-                Duplicate
-              </button>
-              <button 
-                className="delete-btn" 
-                onClick={handleDeleteClick}
-                disabled={isSaving}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-
-          {/* TIMESTAMPS */}
-          {(getCreatedTime() || getModifiedTime()) && (
-            <div className="note-timestamps">
-              {getCreatedTime() && (
-                <span className="note-timestamp-created">
-                  Created {getCreatedTime()}
-                </span>
-              )}
-              {getModifiedTime() && (
-                <span className="note-timestamp-modified">
-                  Modified {getModifiedTime()}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* TAG DISPLAY IN VIEW MODE */}
-          {tags.length > 0 && (
-            <div className="note-tags-display">
-              {tags.map(tag => (
-                <span key={tag} className="note-tag">{tag}</span>
-              ))}
-            </div>
-          )}
-
-          <div className="note-content">
-            {renderContentWithLinks()}
-          </div>
-
-          {renderBacklinks()}
-
-          {hoveredLinkTitle && (
-            <div 
-              className="link-preview-tooltip"
-              style={{
-                left: `${hoverPreviewPos.x}px`,
-                top: `${hoverPreviewPos.y + 20}px`
-              }}
-            >
-              <div className="tooltip-title">{hoveredLinkTitle}</div>
-              <div className="tooltip-preview">
-                {getNoteByTitle(hoveredLinkTitle)?.content?.substring(0, 100)}...
-              </div>
-            </div>
-          )}
-        </>
-      )}
+  // Empty state
+  return (
+    <div className="note-editor">
+      <div className="note-editor-empty">
+        <p>Select a note or create a new one</p>
+      </div>
     </div>
   );
 }
