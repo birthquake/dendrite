@@ -16,6 +16,7 @@ export function NoteEditor({
   allTags,
   onSelectNote,
   onCreateNew,
+  onCancel,
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -115,6 +116,10 @@ export function NoteEditor({
       setLinkedNotes([]);
     }
     setIsEditing(false);
+    // Call onCancel callback to reset creating state in App.js
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   const handleContentChange = (e) => {
