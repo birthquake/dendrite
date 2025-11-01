@@ -15,6 +15,7 @@ import { ToastProvider, useToast } from './components/toast/toast-provider';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { CommandPalette } from './components/CommandPalette';
 import ThemeToggle from './components/ThemeToggle';
+import HamburgerMenu from './components/HamburgerMenu';
 import NoteEditor from './components/NoteEditor';
 import NoteList from './components/NoteList';
 import Graph from './components/Graph';
@@ -27,6 +28,7 @@ function AppContent() {
   const [view, setView] = useState('list');
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [sortBy, setSortBy] = useState(() => {
     // Load sort preference from localStorage
     return localStorage.getItem('dendrite-sort-preference') || 'date-created';
@@ -285,6 +287,19 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Close mobile sidebar when a note is selected
+  const handleSelectNote = (note) => {
+    setSelectedNote(note);
+    setIsMobileSidebarOpen(false);
+  };
+
+  // Close mobile sidebar when creating new note
+  const handleCreateNewNote = () => {
+    setSelectedNote(null);
+    setIsCreatingNewNote(true);
+    setIsMobileSidebarOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -314,6 +329,12 @@ function AppContent() {
       <header className="header">
         <h1>🧠 Dendrite</h1>
         <div className="header-controls">
+          {view === 'list' && (
+            <HamburgerMenu 
+              isOpen={isMobileSidebarOpen}
+              onToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            />
+          )}
           <ThemeToggle />
           <div className="view-toggle">
             <button 
@@ -333,18 +354,24 @@ function AppContent() {
           </div>
         </div>
       </header>
-      <div className="main-container">
+
+      {/* Mobile sidebar overlay */}
+      {isMobileSidebarOpen && view === 'list' && (
+        <div 
+          className="mobile-sidebar-overlay"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      <div className={`main-container ${isMobileSidebarOpen ? 'sidebar-open' : ''}`}>
         {view === 'list' ? (
           <>
             <div className="sidebar">
               <NoteList 
                 notes={sortedNotes} 
                 selectedNote={selectedNote}
-                onSelectNote={setSelectedNote}
-                onCreateNewNote={() => {
-                  setSelectedNote(null);
-                  setIsCreatingNewNote(true);
-                }}
+                onSelectNote={handleSelectNote}
+                onCreateNewNote={handleCreateNewNote}
                 allTags={getAllTags()}
                 sortBy={sortBy}
                 onSortChange={handleSortChange}
