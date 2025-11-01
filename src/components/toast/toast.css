@@ -22,8 +22,8 @@
   padding: 1rem;
   border-radius: 0.5rem;
   border: 1px solid;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-md);
   min-width: 320px;
   max-width: 420px;
   animation: slideInFromRight 0.3s ease-out;
@@ -43,58 +43,58 @@
 
 /* Success Toast */
 .toast-notification.bg-emerald-500\/10 {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
+  background-color: var(--color-success-bg);
+  border-color: var(--color-success-border);
 }
 
 .toast-notification.bg-emerald-500\/10 .icon {
-  color: #6ee7b7;
+  color: var(--color-success-light);
 }
 
 .toast-notification.bg-emerald-500\/10 .message {
-  color: #d1fae5;
+  color: var(--color-success-text);
 }
 
 /* Error Toast */
 .toast-notification.bg-red-500\/10 {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
+  background-color: var(--color-error-bg);
+  border-color: var(--color-error-border);
 }
 
 .toast-notification.bg-red-500\/10 .icon {
-  color: #f87171;
+  color: var(--color-error-light);
 }
 
 .toast-notification.bg-red-500\/10 .message {
-  color: #fee2e2;
+  color: var(--color-error-text);
 }
 
 /* Info Toast */
 .toast-notification.bg-blue-500\/10 {
-  background-color: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
+  background-color: var(--color-info-bg);
+  border-color: var(--color-info-border);
 }
 
 .toast-notification.bg-blue-500\/10 .icon {
-  color: #60a5fa;
+  color: var(--color-info-light);
 }
 
 .toast-notification.bg-blue-500\/10 .message {
-  color: #dbeafe;
+  color: var(--color-info-text);
 }
 
 /* Warning Toast */
 .toast-notification.bg-amber-500\/10 {
-  background-color: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.3);
+  background-color: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
 }
 
 .toast-notification.bg-amber-500\/10 .icon {
-  color: #fbbf24;
+  color: var(--color-warning-light);
 }
 
 .toast-notification.bg-amber-500\/10 .message {
-  color: #fef3c7;
+  color: var(--color-warning-text);
 }
 
 /* Icon */
@@ -114,7 +114,8 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
+  color: inherit;
 }
 
 .toast-notification button:hover {
@@ -166,11 +167,11 @@
 }
 
 .backdrop-blur-sm {
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--backdrop-blur);
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
 .animate-in {
@@ -238,67 +239,67 @@
 }
 
 .text-emerald-400 {
-  color: #6ee7b7;
+  color: var(--color-success-light);
 }
 
 .text-emerald-100 {
-  color: #d1fae5;
+  color: var(--color-success-text);
 }
 
 .text-red-400 {
-  color: #f87171;
+  color: var(--color-error-light);
 }
 
 .text-red-100 {
-  color: #fee2e2;
+  color: var(--color-error-text);
 }
 
 .text-blue-400 {
-  color: #60a5fa;
+  color: var(--color-info-light);
 }
 
 .text-blue-100 {
-  color: #dbeafe;
+  color: var(--color-info-text);
 }
 
 .text-amber-400 {
-  color: #fbbf24;
+  color: var(--color-warning-light);
 }
 
 .text-amber-100 {
-  color: #fef3c7;
+  color: var(--color-warning-text);
 }
 
 .bg-emerald-500\/10 {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: var(--color-success-bg);
 }
 
 .border-emerald-500\/30 {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: var(--color-success-border);
 }
 
 .bg-red-500\/10 {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: var(--color-error-bg);
 }
 
 .border-red-500\/30 {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: var(--color-error-border);
 }
 
 .bg-blue-500\/10 {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--color-info-bg);
 }
 
 .border-blue-500\/30 {
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: var(--color-info-border);
 }
 
 .bg-amber-500\/10 {
-  background-color: rgba(245, 158, 11, 0.1);
+  background-color: var(--color-warning-bg);
 }
 
 .border-amber-500\/30 {
-  border-color: rgba(245, 158, 11, 0.3);
+  border-color: var(--color-warning-border);
 }
 
 .rounded-md {
@@ -358,5 +359,10 @@
   .toast-notification {
     min-width: calc(100vw - 2rem);
     max-width: calc(100vw - 2rem);
+  }
+
+  .toast-container {
+    bottom: 1rem;
+    right: 1rem;
   }
 }
