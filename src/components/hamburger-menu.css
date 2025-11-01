@@ -1,0 +1,54 @@
+/* Hamburger Menu Button */
+.hamburger-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 0;
+  outline: none;
+}
+
+.hamburger-menu-btn:hover {
+  background-color: var(--bg-hover-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.hamburger-menu-btn:active {
+  transform: scale(0.95);
+}
+
+.hamburger-menu-btn:focus {
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
+}
+
+.hamburger-icon {
+  transition: var(--transition-fast);
+}
+
+/* Show hamburger menu on mobile */
+@media (max-width: 768px) {
+  .hamburger-menu-btn {
+    display: flex;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .hamburger-menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hamburger-menu-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
