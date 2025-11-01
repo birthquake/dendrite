@@ -53,11 +53,9 @@ function AppContent() {
 
   const loadNotes = async () => {
     try {
-      const q = query(
-        collection(db, 'notes'),
-        where('userId', '==', user.uid)
-      );
-      const querySnapshot = await getDocs(q);
+      // Load notes from user-scoped collection
+      const notesRef = collection(db, `users/${user.uid}/notes`);
+      const querySnapshot = await getDocs(notesRef);
       const notesArray = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -124,8 +122,7 @@ function AppContent() {
     }
     
     try {
-      const docRef = await addDoc(collection(db, 'notes'), {
-        userId: user.uid,
+      const docRef = await addDoc(collection(db, `users/${user.uid}/notes`), {
         title: title,
         content: '',
         createdAt: new Date(),
@@ -171,8 +168,7 @@ function AppContent() {
     try {
       const linkedNotes = extractLinkedNoteIds(content);
 
-      await addDoc(collection(db, 'notes'), {
-        userId: user.uid,
+      await addDoc(collection(db, `users/${user.uid}/notes`), {
         title: title,
         content: content,
         createdAt: new Date(),
@@ -192,7 +188,7 @@ function AppContent() {
     try {
       const extractedLinkedNotes = extractLinkedNoteIds(content);
 
-      await updateDoc(doc(db, 'notes', noteId), {
+      await updateDoc(doc(db, `users/${user.uid}/notes`, noteId), {
         title: title,
         content: content,
         linkedNotes: extractedLinkedNotes,
@@ -210,7 +206,7 @@ function AppContent() {
 
   const deleteNote = async (noteId) => {
     try {
-      await deleteDoc(doc(db, 'notes', noteId));
+      await deleteDoc(doc(db, `users/${user.uid}/notes`, noteId));
       loadNotes();
       setSelectedNote(null);
       toast.success('Note deleted');
@@ -229,8 +225,7 @@ function AppContent() {
 
       const newTitle = `${noteToDuplicate.title} (copy)`;
       
-      const docRef = await addDoc(collection(db, 'notes'), {
-        userId: user.uid,
+      const docRef = await addDoc(collection(db, `users/${user.uid}/notes`), {
         title: newTitle,
         content: noteToDuplicate.content,
         createdAt: new Date(),
