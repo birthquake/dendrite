@@ -116,7 +116,6 @@ export function NoteEditor({
       setLinkedNotes([]);
     }
     setIsEditing(false);
-    // Call onCancel callback to reset creating state in App.js
     if (onCancel) {
       onCancel();
     }
@@ -126,7 +125,6 @@ export function NoteEditor({
     const newContent = e.target.value;
     setContent(newContent);
 
-    // Check for [[ to trigger autocomplete
     const lastBracketIndex = newContent.lastIndexOf('[[');
     const lastCloseBracketIndex = newContent.lastIndexOf(']]');
 
@@ -160,7 +158,6 @@ export function NoteEditor({
     setContent(newContent);
     setAutocompleteMatches([]);
 
-    // Update linked notes
     const linkedNote = getNoteByTitle(noteName);
     if (linkedNote && !linkedNotes.includes(linkedNote.id)) {
       setLinkedNotes([...linkedNotes, linkedNote.id]);
@@ -200,6 +197,53 @@ export function NoteEditor({
     }
   };
 
+  const renderContent = () => {
+    if (!note?.content) return null;
+
+    const lines = note.content.split('\n');
+    
+    return lines.map((paragraph, idx) => {
+      if (!paragraph) return <br key={idx} />;
+
+      const parts = paragraph.split(/(\[\[[^\]]+\]\])/g);
+      
+      return (
+        <p key={idx}>
+          {parts.map((part, partIdx) => {
+            const linkMatch = part.match(/\[\[([^\]]+)\]\]/);
+            if (linkMatch) {
+              const linkTitle = linkMatch[1];
+              const linkedNote = getNoteByTitle(linkTitle);
+              
+              if (linkedNote) {
+                return (
+                  <button
+                    key={partIdx}
+                    className="note-content-link"
+                    onClick={() => onSelectNote(linkedNote)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-primary)',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      padding: 0,
+                      font: 'inherit',
+                    }}
+                  >
+                    {part}
+                  </button>
+                );
+              }
+            }
+            
+            return part;
+          })}
+        </p>
+      );
+    });
+  };
+
   // View mode
   if (!isEditing && note) {
     const linkedNotesData = note.linkedNotes
@@ -208,7 +252,6 @@ export function NoteEditor({
 
     return (
       <div className="note-editor">
-        {/* Icon Button Header */}
         <div className="note-editor-header">
           <div className="note-editor-actions">
             <button
@@ -246,7 +289,6 @@ export function NoteEditor({
           </div>
         </div>
 
-        {/* Note Content */}
         <div className="note-editor-content">
           <h1 className="note-title">{note.title}</h1>
 
@@ -267,9 +309,7 @@ export function NoteEditor({
           )}
 
           <div className="note-content-view">
-            {note.content.split('\n').map((paragraph, idx) => (
-              <p key={idx}>{paragraph || <br />}</p>
-            ))}
+            {renderContent()}
           </div>
 
           {linkedNotesData.length > 0 && (
@@ -314,7 +354,6 @@ export function NoteEditor({
   if (isEditing || isCreatingNewNote) {
     return (
       <div className="note-editor">
-        {/* Save/Cancel Header */}
         <div className="note-editor-header">
           <div className="note-editor-actions">
             <button
@@ -336,7 +375,6 @@ export function NoteEditor({
           </div>
         </div>
 
-        {/* Edit Form */}
         <div className="note-editor-form">
           <input
             type="text"
@@ -441,7 +479,6 @@ export function NoteEditor({
           <button 
             className="empty-action-btn empty-action-select"
             onClick={() => {
-              // Trigger hamburger menu on mobile to show sidebar
               const hamburger = document.querySelector('.hamburger-menu-btn');
               if (hamburger) {
                 hamburger.click();
