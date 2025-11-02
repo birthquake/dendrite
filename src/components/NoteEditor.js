@@ -153,7 +153,9 @@ export function NoteEditor({
   const insertLink = (noteName) => {
     const lastBracketIndex = content.lastIndexOf('[[');
     const before = content.substring(0, lastBracketIndex);
-    const after = content.substring(content.indexOf(']]', lastBracketIndex) + 2);
+    const afterBracket = content.substring(lastBracketIndex + 2);
+    const endSearchIndex = afterBracket.indexOf(']]');
+    const after = endSearchIndex === -1 ? '' : afterBracket.substring(endSearchIndex + 2);
     const newContent = `${before}[[${noteName}]]${after}`;
     setContent(newContent);
     setAutocompleteMatches([]);
