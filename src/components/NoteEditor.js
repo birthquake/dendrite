@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Edit2, Copy, Trash2, Save, X, BookOpen, Plus } from 'lucide-react';
+import { Edit2, Copy, Trash2, Save, X, BookOpen, Plus, Share2 } from 'lucide-react';
+import { ShareModal } from './ShareModal';
+import { ShareList } from './ShareList';
+import { PermissionBadge } from './PermissionBadge';
 import './NoteEditor.css';
 
 export function NoteEditor({
@@ -17,6 +20,12 @@ export function NoteEditor({
   onSelectNote,
   onCreateNew,
   onCancel,
+  onShare,
+  onUnshare,
+  isOwner,
+  permission,
+  currentShares,
+  currentUserEmail,
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -27,6 +36,7 @@ export function NoteEditor({
   const [backlinks, setBacklinks] = useState([]);
   const [autocompleteMatches, setAutocompleteMatches] = useState([]);
   const [autocompleteIndex, setAutocompleteIndex] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
   const contentRef = useRef(null);
   const autocompleteRef = useRef(null);
   const [lastSaved, setLastSaved] = useState(null);
@@ -244,6 +254,10 @@ export function NoteEditor({
     });
   };
 
+  const canEdit = permission !== 'view' && permission !== null;
+  const canDelete = isOwner;
+  const canShare = isOwner;
+
   // View mode
   if (!isEditing && note) {
     const linkedNotesData = note.linkedNotes
@@ -252,16 +266,45 @@ export function NoteEditor({
 
     return (
       <div className="note-editor">
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShare={onShare}
+          currentShares={currentShares || []}
+          currentUserEmail={currentUserEmail}
+          note={note}
+        />
+
         <div className="note-editor-header">
           <div className="note-editor-actions">
-            <button
-              className="icon-button icon-button-edit"
-              onClick={() => setIsEditing(true)}
-              title="Edit note (Cmd+E)"
-              aria-label="Edit note"
-            >
-              <Edit2 size={20} />
-            </button>
+            {permission && permission !== 'admin' && (
+              <div className="note-permission-indicator">
+                <PermissionBadge permission={permission} size="md" />
+              </div>
+            )}
+            
+            {canEdit && (
+              <button
+                className="icon-button icon-button-edit"
+                onClick={() => setIsEditing(true)}
+                title="Edit note (Cmd+E)"
+                aria-label="Edit note"
+              >
+                <Edit2 size={20} />
+              </button>
+            )}
+
+            {canShare && (
+              <button
+                className="icon-button icon-button-share"
+                onClick={() => setShowShareModal(true)}
+                title="Share note"
+                aria-label="Share note"
+              >
+                <Share2 size={20} />
+              </button>
+            )}
+
             <button
               className="icon-button icon-button-duplicate"
               onClick={() => onDuplicate(note.id)}
@@ -270,22 +313,25 @@ export function NoteEditor({
             >
               <Copy size={20} />
             </button>
-            <button
-              className="icon-button icon-button-delete"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    'Are you sure you want to delete this note? This cannot be undone.'
-                  )
-                ) {
-                  onDelete(note.id);
-                }
-              }}
-              title="Delete note"
-              aria-label="Delete note"
-            >
-              <Trash2 size={20} />
-            </button>
+
+            {canDelete && (
+              <button
+                className="icon-button icon-button-delete"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      'Are you sure you want to delete this note? This cannot be undone.'
+                    )
+                  ) {
+                    onDelete(note.id);
+                  }
+                }}
+                title="Delete note"
+                aria-label="Delete note"
+              >
+                <Trash2 size={20} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -344,6 +390,14 @@ export function NoteEditor({
                 ))}
               </div>
             </div>
+          )}
+
+          {canShare && currentShares && currentShares.length > 0 && (
+            <ShareList
+              shares={currentShares}
+              isOwner={canShare}
+              onRemoveShare={onUnshare}
+            />
           )}
         </div>
       </div>
