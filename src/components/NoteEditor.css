@@ -785,3 +785,121 @@
     font-size: 16px;
   }
 }
+
+/* Permission indicator in header */
+.note-permission-indicator {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+  margin-left: 8px;
+}
+
+/* Share button styling */
+.icon-button-share {
+  color: var(--color-primary, #3b82f6);
+  transition: all 0.2s ease;
+}
+
+.icon-button-share:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  transform: scale(1.1);
+}
+
+.icon-button-share:active {
+  transform: scale(0.95);
+}
+
+/* Icon button base styling (enhance existing) */
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  color: var(--text-primary, #1f2937);
+  background-color: var(--bg-hover, #f3f4f6);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+.icon-button-edit {
+  color: var(--color-primary, #3b82f6);
+}
+
+.icon-button-edit:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.icon-button-duplicate {
+  color: var(--color-warning, #f59e0b);
+}
+
+.icon-button-duplicate:hover {
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.icon-button-delete {
+  color: var(--color-danger, #ef4444);
+}
+
+.icon-button-delete:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.icon-button-save {
+  color: var(--color-success, #10b981);
+}
+
+.icon-button-save:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.icon-button-cancel {
+  color: var(--text-secondary, #6b7280);
+}
+
+.icon-button-cancel:hover {
+  background-color: rgba(107, 114, 128, 0.1);
+}
+
+/* Note editor header adjustments for sharing */
+.note-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background-color: var(--bg-secondary, #f9fafb);
+}
+
+.note-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .icon-button {
+    padding: 6px;
+  }
+
+  .icon-button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .note-permission-indicator {
+    margin-right: 8px;
+  }
+}
