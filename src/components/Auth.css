@@ -160,33 +160,23 @@
 }
 
 .auth-divider {
-  text-align: center;
-  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin: 20px 0;
+  color: var(--text-tertiary);
   font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  position: relative;
 }
 
-.auth-divider::before {
+.auth-divider::before,
+.auth-divider::after {
   content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
+  flex: 1;
   height: 1px;
   background: var(--bg-tertiary);
-  z-index: 0;
-}
-
-.auth-divider {
-  z-index: 1;
-  background: var(--bg-secondary);
-  padding: 0 12px;
-  display: inline-block;
-  width: 100%;
 }
 
 .auth-google-btn {
@@ -313,6 +303,7 @@
 
   .auth-divider {
     margin: 16px 0;
+    gap: 10px;
   }
 
   .auth-google-btn {
