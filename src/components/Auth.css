@@ -50,7 +50,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .auth-input-group {
@@ -162,7 +162,7 @@
 .auth-divider {
   text-align: center;
   color: var(--text-tertiary);
-  margin: 24px 0;
+  margin: 20px 0;
   font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
@@ -205,6 +205,7 @@
   cursor: pointer;
   transition: all 0.2s;
   min-height: 44px;
+  margin-bottom: 20px;
 }
 
 .auth-google-btn:hover:not(:disabled) {
@@ -266,6 +267,15 @@
 
   .auth-form {
     gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .auth-divider {
+    margin: 18px 0;
+  }
+
+  .auth-google-btn {
+    margin-bottom: 18px;
   }
 
   .auth-input-group {
@@ -292,6 +302,27 @@
     font-size: 13px;
   }
 
+  .auth-header {
+    margin-bottom: 24px;
+  }
+
+  .auth-form {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .auth-divider {
+    margin: 16px 0;
+  }
+
+  .auth-google-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    gap: 8px;
+    min-height: 40px;
+    margin-bottom: 16px;
+  }
+
   .auth-form input {
     font-size: 14px;
     padding: 10px 10px 10px 40px;
@@ -302,8 +333,7 @@
     height: 18px;
   }
 
-  .auth-submit-btn,
-  .auth-google-btn {
+  .auth-submit-btn {
     padding: 10px 14px;
     font-size: 13px;
     gap: 8px;
