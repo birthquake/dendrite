@@ -1,0 +1,47 @@
+.permission-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* View only - green */
+.badge-view {
+  background-color: var(--color-success, #10b981);
+  color: white;
+}
+
+/* Can edit - blue */
+.badge-edit {
+  background-color: var(--color-primary, #3b82f6);
+  color: white;
+}
+
+/* Admin - red/orange */
+.badge-admin {
+  background-color: var(--color-danger, #ef4444);
+  color: white;
+}
+
+.badge-default {
+  background-color: var(--color-gray, #6b7280);
+  color: white;
+}
+
+/* Size variants */
+.badge-sm {
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.badge-md {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.badge-lg {
+  padding: 6px 12px;
+  font-size: 13px;
+}
