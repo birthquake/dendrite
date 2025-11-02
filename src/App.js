@@ -8,7 +8,9 @@ import {
   doc,
   updateDoc,
   query,
-  where
+  where,
+  setDoc,
+  getDoc,
 } from 'firebase/firestore';
 import './styles/theme-variables.css';
 import './App.css';
@@ -25,6 +27,8 @@ import { PrivateRoute } from './components/PrivateRoute';
 
 function AppContent() {
   const [notes, setNotes] = useState([]);
+  const [sharedNotes, setSharedNotes] = useState([]);
+  const [noteShares, setNoteShares] = useState({});
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,6 +46,7 @@ function AppContent() {
     const initApp = async () => {
       try {
         await loadNotes();
+        await loadSharedNotes();
         setLoading(false);
       } catch (error) {
         toast.error('Failed to initialize app. Please refresh.');
@@ -53,7 +58,6 @@ function AppContent() {
 
   const loadNotes = async () => {
     try {
-      // Load notes from user-scoped collection
       const notesRef = collection(db, `users/${user.uid}/notes`);
       const querySnapshot = await getDocs(notesRef);
       const notesArray = querySnapshot.docs.map(doc => ({
@@ -64,6 +68,113 @@ function AppContent() {
     } catch (error) {
       toast.error('Failed to load notes');
     }
+  };
+
+  const loadSharedNotes = async () => {
+    try {
+      const usersRef = collection(db, 'users');
+      const allUsersSnap = await getDocs(usersRef);
+      
+      const shared = [];
+      
+      for (const userDoc of allUsersSnap.docs) {
+        if (userDoc.id === user.uid) continue;
+        
+        const notesRef = collection(db, `users/${userDoc.id}/notes`);
+        const notesSnap = await getDocs(notesRef);
+        
+        for (const noteDoc of notesSnap.docs) {
+          const shareRef = doc(db, `users/${userDoc.id}/notes/${noteDoc.id}/shares/${user.uid}`);
+          const shareSnap = await getDoc(shareRef);
+          
+          if (shareSnap.exists()) {
+            shared.push({
+              id: noteDoc.id,
+              ownerId: userDoc.id,
+              ...noteDoc.data(),
+              permission: shareSnap.data().permission,
+            });
+          }
+        }
+      }
+      
+      setSharedNotes(shared);
+    } catch (error) {
+      console.error('Failed to load shared notes:', error);
+    }
+  };
+
+  const shareNote = async (noteId, email, permission) => {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnap = await getDocs(q);
+      
+      if (querySnap.empty) {
+        toast.error('User not found');
+        return;
+      }
+      
+      const sharedWithUid = querySnap.docs[0].id;
+      
+      const shareRef = doc(db, `users/${user.uid}/notes/${noteId}/shares/${sharedWithUid}`);
+      await setDoc(shareRef, {
+        email: email,
+        permission: permission,
+        sharedAt: new Date(),
+        sharedByEmail: user.email,
+      });
+      
+      await getNotesShares(noteId);
+      toast.success(`Note shared with ${email}`);
+    } catch (error) {
+      toast.error('Failed to share note');
+      console.error('Share error:', error);
+    }
+  };
+
+  const unshareNote = async (noteId, sharedWithUid) => {
+    try {
+      const shareRef = doc(db, `users/${user.uid}/notes/${noteId}/shares/${sharedWithUid}`);
+      await deleteDoc(shareRef);
+      
+      await getNotesShares(noteId);
+      toast.success('Access revoked');
+    } catch (error) {
+      toast.error('Failed to revoke access');
+      console.error('Unshare error:', error);
+    }
+  };
+
+  const getNotesShares = async (noteId) => {
+    try {
+      const sharesRef = collection(db, `users/${user.uid}/notes/${noteId}/shares`);
+      const sharesSnap = await getDocs(sharesRef);
+      
+      const shares = sharesSnap.docs.map(doc => ({
+        uid: doc.id,
+        ...doc.data()
+      }));
+      
+      setNoteShares(prev => ({
+        ...prev,
+        [noteId]: shares
+      }));
+    } catch (error) {
+      console.error('Failed to load shares:', error);
+    }
+  };
+
+  const isNoteOwner = (noteId) => {
+    return notes.some(n => n.id === noteId);
+  };
+
+  const getUserPermission = (noteId) => {
+    const ownedNote = notes.find(n => n.id === noteId);
+    if (ownedNote) return 'admin';
+    
+    const sharedNote = sharedNotes.find(n => n.id === noteId);
+    return sharedNote?.permission || null;
   };
 
   const getSortedNotes = (notesToSort) => {
@@ -98,16 +209,18 @@ function AppContent() {
   };
 
   const getNoteByTitle = (title) => {
-    return notes.find(note => note.title.toLowerCase() === title.toLowerCase());
+    const allNotesArray = [...notes, ...sharedNotes];
+    return allNotesArray.find(note => note.title.toLowerCase() === title.toLowerCase());
   };
 
   const getBacklinks = (noteId) => {
-    const targetNote = notes.find(n => n.id === noteId);
+    const allNotesArray = [...notes, ...sharedNotes];
+    const targetNote = allNotesArray.find(n => n.id === noteId);
     if (!targetNote) {
       return [];
     }
     
-    const backlinks = notes.filter(note => 
+    const backlinks = allNotesArray.filter(note => 
       note.linkedNotes && note.linkedNotes.includes(noteId)
     );
     
@@ -155,8 +268,9 @@ function AppContent() {
   };
 
   const getAllTags = () => {
+    const allNotesArray = [...notes, ...sharedNotes];
     const tagsSet = new Set();
-    notes.forEach(note => {
+    allNotesArray.forEach(note => {
       if (note.tags && Array.isArray(note.tags)) {
         note.tags.forEach(tag => tagsSet.add(tag));
       }
@@ -186,9 +300,23 @@ function AppContent() {
 
   const updateNote = async (noteId, title, content, linkedNotes = [], tags = []) => {
     try {
-      const extractedLinkedNotes = extractLinkedNoteIds(content);
+      const permission = getUserPermission(noteId);
+      
+      if (permission === 'view') {
+        toast.error('You do not have permission to edit this note');
+        return;
+      }
 
-      await updateDoc(doc(db, `users/${user.uid}/notes`, noteId), {
+      const extractedLinkedNotes = extractLinkedNoteIds(content);
+      const isOwner = isNoteOwner(noteId);
+      const targetPath = isOwner 
+        ? `users/${user.uid}/notes/${noteId}`
+        : (() => {
+            const sharedNote = sharedNotes.find(n => n.id === noteId);
+            return `users/${sharedNote.ownerId}/notes/${noteId}`;
+          })();
+
+      await updateDoc(doc(db, targetPath), {
         title: title,
         content: content,
         linkedNotes: extractedLinkedNotes,
@@ -197,6 +325,7 @@ function AppContent() {
       });
       
       await loadNotes();
+      await loadSharedNotes();
       setSelectedNote(null);
       toast.success('Note saved successfully!');
     } catch (error) {
@@ -206,6 +335,11 @@ function AppContent() {
 
   const deleteNote = async (noteId) => {
     try {
+      if (!isNoteOwner(noteId)) {
+        toast.error('You can only delete notes you own');
+        return;
+      }
+
       await deleteDoc(doc(db, `users/${user.uid}/notes`, noteId));
       loadNotes();
       setSelectedNote(null);
@@ -217,7 +351,8 @@ function AppContent() {
 
   const duplicateNote = async (noteId) => {
     try {
-      const noteToDuplicate = notes.find(n => n.id === noteId);
+      const allNotesArray = [...notes, ...sharedNotes];
+      const noteToDuplicate = allNotesArray.find(n => n.id === noteId);
       if (!noteToDuplicate) {
         toast.error('Note not found');
         return;
@@ -287,6 +422,9 @@ function AppContent() {
   }, [handleKeyDown]);
 
   const handleSelectNote = (note) => {
+    if (isNoteOwner(note.id)) {
+      getNotesShares(note.id);
+    }
     setSelectedNote(note);
     setIsMobileSidebarOpen(false);
   };
@@ -312,7 +450,8 @@ function AppContent() {
     );
   }
 
-  const sortedNotes = getSortedNotes(notes);
+  const allNotesArray = [...notes, ...sharedNotes];
+  const sortedNotes = getSortedNotes(allNotesArray);
 
   return (
     <div className="App">
@@ -323,9 +462,9 @@ function AppContent() {
       <CommandPalette 
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
-        notes={notes}
+        notes={allNotesArray}
         onSelectNote={(note) => {
-          setSelectedNote(note);
+          handleSelectNote(note);
           setView('list');
         }}
       />
@@ -395,25 +534,31 @@ function AppContent() {
               {selectedNote ? (
                 <NoteEditor 
                   note={selectedNote}
-                  allNotes={notes}
+                  allNotes={allNotesArray}
                   onSave={updateNote}
                   onDelete={deleteNote}
                   onDuplicate={duplicateNote}
-                  onSelectNote={setSelectedNote}
+                  onSelectNote={handleSelectNote}
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
                   createNoteIfNotExists={createNoteIfNotExists}
                   allTags={getAllTags()}
                   onCreateNew={handleCreateNewNote}
                   onCancel={handleCancelEdit}
+                  onShare={shareNote}
+                  onUnshare={unshareNote}
+                  isOwner={isNoteOwner(selectedNote.id)}
+                  permission={getUserPermission(selectedNote.id)}
+                  currentShares={noteShares[selectedNote.id] || []}
+                  currentUserEmail={user.email}
                 />
               ) : (
                 <NoteEditor 
                   note={null}
-                  allNotes={notes}
+                  allNotes={allNotesArray}
                   onCreate={createNote}
                   onDelete={deleteNote}
-                  onSelectNote={setSelectedNote}
+                  onSelectNote={handleSelectNote}
                   isCreatingNewNote={isCreatingNewNote}
                   getNoteByTitle={getNoteByTitle}
                   getBacklinks={getBacklinks}
@@ -427,9 +572,9 @@ function AppContent() {
           </>
         ) : (
           <Graph 
-            notes={notes} 
+            notes={allNotesArray} 
             onSelectNote={(note) => {
-              setSelectedNote(note);
+              handleSelectNote(note);
               setView('list');
             }} 
           />
