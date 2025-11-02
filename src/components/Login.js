@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock, LogIn, Loader } from 'lucide-react';
+import { Mail, Lock, LogIn, Loader, AlertCircle, Brain } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import './Auth.css';
 
@@ -122,3 +122,5 @@ export function Login({ onSwitchToSignup }) {
     </div>
   );
 }
+
+export default Login;
