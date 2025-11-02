@@ -1,0 +1,92 @@
+.share-list {
+  background-color: var(--bg-secondary, #f9fafb);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.share-list-header {
+  margin-bottom: 12px;
+}
+
+.share-list-header h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.share-list-empty {
+  margin: 0;
+  padding: 8px;
+  font-size: 13px;
+  color: var(--text-tertiary, #9ca3af);
+  font-style: italic;
+}
+
+.share-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background-color: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.share-list-item:hover {
+  background-color: var(--bg-hover, #f3f4f6);
+}
+
+.share-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.share-item-email {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  word-break: break-all;
+}
+
+.share-item-date {
+  font-size: 11px;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.share-remove-btn {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: var(--color-danger, #ef4444);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+}
+
+.share-remove-btn:hover {
+  opacity: 0.8;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.share-remove-btn:active {
+  opacity: 0.6;
+}
