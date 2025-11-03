@@ -11,6 +11,7 @@ import {
   where,
   setDoc,
   getDoc,
+  arrayUnion,
 } from 'firebase/firestore';
 import './styles/theme-variables.css';
 import './App.css';
@@ -72,29 +73,32 @@ function AppContent() {
 
   const loadSharedNotes = async () => {
     try {
-      const usersRef = collection(db, 'users');
-      const allUsersSnap = await getDocs(usersRef);
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
       
+      if (!userSnap.exists() || !userSnap.data().sharedWithMe) {
+        setSharedNotes([]);
+        return;
+      }
+      
+      const sharedWithMeList = userSnap.data().sharedWithMe || [];
       const shared = [];
       
-      for (const userDoc of allUsersSnap.docs) {
-        if (userDoc.id === user.uid) continue;
-        
-        const notesRef = collection(db, `users/${userDoc.id}/notes`);
-        const notesSnap = await getDocs(notesRef);
-        
-        for (const noteDoc of notesSnap.docs) {
-          const shareRef = doc(db, `users/${userDoc.id}/notes/${noteDoc.id}/shares/${user.uid}`);
-          const shareSnap = await getDoc(shareRef);
+      for (const share of sharedWithMeList) {
+        try {
+          const noteRef = doc(db, `users/${share.ownerId}/notes/${share.noteId}`);
+          const noteSnap = await getDoc(noteRef);
           
-          if (shareSnap.exists()) {
+          if (noteSnap.exists()) {
             shared.push({
-              id: noteDoc.id,
-              ownerId: userDoc.id,
-              ...noteDoc.data(),
-              permission: shareSnap.data().permission,
+              id: share.noteId,
+              ownerId: share.ownerId,
+              ...noteSnap.data(),
+              permission: share.permission,
             });
           }
+        } catch (err) {
+          console.error('Error loading shared note:', err);
         }
       }
       
@@ -117,12 +121,23 @@ function AppContent() {
       
       const sharedWithUid = querySnap.docs[0].id;
       
+      // Create share document
       const shareRef = doc(db, `users/${user.uid}/notes/${noteId}/shares/${sharedWithUid}`);
       await setDoc(shareRef, {
         email: email,
         permission: permission,
         sharedAt: new Date(),
         sharedByEmail: user.email,
+      });
+      
+      // Also store reference in recipient's user document
+      const recipientUserRef = doc(db, 'users', sharedWithUid);
+      await updateDoc(recipientUserRef, {
+        sharedWithMe: arrayUnion({
+          noteId: noteId,
+          ownerId: user.uid,
+          permission: permission,
+        })
       });
       
       await getNotesShares(noteId);
