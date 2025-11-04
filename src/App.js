@@ -341,7 +341,6 @@ function AppContent() {
       
       await loadNotes();
       await loadSharedNotes();
-      setSelectedNote(null);
       toast.success('Note saved successfully!');
     } catch (error) {
       toast.error('Failed to save note');
