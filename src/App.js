@@ -165,8 +165,20 @@ function AppContent() {
 
   const unshareNote = async (noteId, sharedWithUid) => {
     try {
+      // Delete the share document
       const shareRef = doc(db, `users/${user.uid}/notes/${noteId}/shares/${sharedWithUid}`);
       await deleteDoc(shareRef);
+      
+      // Remove from recipient's sharedWithMe array
+      const recipientUserRef = doc(db, 'users', sharedWithUid);
+      const recipientSnap = await getDoc(recipientUserRef);
+      
+      if (recipientSnap.exists()) {
+        const updatedSharedWithMe = recipientSnap.data().sharedWithMe?.filter(s => s.noteId !== noteId) || [];
+        await updateDoc(recipientUserRef, {
+          sharedWithMe: updatedSharedWithMe
+        });
+      }
       
       await getNotesShares(noteId);
       toast.success('Access revoked');
