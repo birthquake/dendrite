@@ -121,7 +121,7 @@ function AppContent() {
       
       const sharedWithUid = querySnap.docs[0].id;
       
-      // Create share document
+      // Create or update share document
       const shareRef = doc(db, `users/${user.uid}/notes/${noteId}/shares/${sharedWithUid}`);
       await setDoc(shareRef, {
         email: email,
@@ -130,18 +130,33 @@ function AppContent() {
         sharedByEmail: user.email,
       });
       
-      // Also store reference in recipient's user document
+      // Check if already in sharedWithMe array
       const recipientUserRef = doc(db, 'users', sharedWithUid);
-      await updateDoc(recipientUserRef, {
-        sharedWithMe: arrayUnion({
-          noteId: noteId,
-          ownerId: user.uid,
-          permission: permission,
-        })
-      });
+      const recipientSnap = await getDoc(recipientUserRef);
+      const existingShare = recipientSnap.data()?.sharedWithMe?.find(s => s.noteId === noteId);
+      
+      if (existingShare) {
+        // Update existing share (permission change)
+        const updatedSharedWithMe = recipientSnap.data().sharedWithMe.map(s =>
+          s.noteId === noteId ? { ...s, permission } : s
+        );
+        await updateDoc(recipientUserRef, {
+          sharedWithMe: updatedSharedWithMe
+        });
+        toast.success(`Permissions updated for ${email}`);
+      } else {
+        // Add new share
+        await updateDoc(recipientUserRef, {
+          sharedWithMe: arrayUnion({
+            noteId: noteId,
+            ownerId: user.uid,
+            permission: permission,
+          })
+        });
+        toast.success(`Note shared with ${email}`);
+      }
       
       await getNotesShares(noteId);
-      toast.success(`Note shared with ${email}`);
     } catch (error) {
       toast.error('Failed to share note');
       console.error('Share error:', error);
