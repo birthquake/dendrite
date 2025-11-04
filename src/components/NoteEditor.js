@@ -397,6 +397,7 @@ export function NoteEditor({
               shares={currentShares}
               isOwner={canShare}
               onRemoveShare={onUnshare}
+              noteId={note.id}
             />
           )}
         </div>
