@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { PermissionBadge } from './PermissionBadge';
 import './ShareList.css';
 
-export function ShareList({ shares, isOwner, onRemoveShare }) {
+export function ShareList({ shares, isOwner, onRemoveShare, noteId }) {
   if (!shares || shares.length === 0) {
     return (
       <div className="share-list">
@@ -33,7 +33,7 @@ export function ShareList({ shares, isOwner, onRemoveShare }) {
             {isOwner && (
               <button
                 className="share-remove-btn"
-                onClick={() => onRemoveShare(share.uid)}
+                onClick={() => onRemoveShare(noteId, share.uid)}
                 title={`Revoke ${share.email}'s access`}
                 aria-label="Remove share"
               >
