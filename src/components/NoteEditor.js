@@ -46,15 +46,14 @@ export function NoteEditor({
   // Initialize form with note data
   useEffect(() => {
     if (note) {
-      setTitle(note.title);
-      setContent(note.content);
-      setTags(note.tags || []);
-      setLinkedNotes(note.linkedNotes || []);
-      setBacklinks(getBacklinks(note.id));
-      
-      // Only close editor if we're not actively editing
+      // Only update content from listener if we're NOT currently editing
+      // This prevents the real-time listener from interrupting your edits
       if (!isEditing) {
-        setIsEditing(false);
+        setTitle(note.title);
+        setContent(note.content);
+        setTags(note.tags || []);
+        setLinkedNotes(note.linkedNotes || []);
+        setBacklinks(getBacklinks(note.id));
       }
     } else if (isCreatingNewNote) {
       setTitle('');
@@ -64,7 +63,7 @@ export function NoteEditor({
       setBacklinks([]);
       setIsEditing(true);
     }
-  }, [note, isCreatingNewNote, getBacklinks]);
+  }, [note, isCreatingNewNote, getBacklinks, isEditing]);
 
   // Auto-save while editing - silently saves without closing editor
   useEffect(() => {
