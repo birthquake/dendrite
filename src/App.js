@@ -99,11 +99,19 @@ function AppContent() {
           (snapshot) => {
             if (snapshot.exists()) {
               console.log('Real-time update received! Data:', snapshot.data());
-              setSelectedNote(prev => ({
-                ...prev,
-                ...snapshot.data(),
-                id: snapshot.id
-              }));
+             const updatedData = {
+  ...snapshot.data(),
+  id: snapshot.id
+};
+setSelectedNote(prev => ({
+  ...prev,
+  ...updatedData
+}));
+
+// Also update in sharedNotes if it's a shared note
+setSharedNotes(prev => prev.map(n => 
+  n.id === snapshot.id ? { ...n, ...updatedData } : n
+));
               setSyncStatus('synced');
             } else {
               console.warn('Snapshot does not exist');
