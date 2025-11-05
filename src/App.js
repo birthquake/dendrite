@@ -63,6 +63,7 @@ function AppContent() {
   // Set up real-time listener for selected note
   useEffect(() => {
     if (!selectedNote || !selectedNote.id) {
+      console.log('No selectedNote or selectedNote.id, cleaning up listener');
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
@@ -73,18 +74,22 @@ function AppContent() {
     const setupListener = async () => {
       try {
         const isOwner = notes.some(n => n.id === selectedNote.id);
+        console.log('Setting up listener for note:', selectedNote.id, 'isOwner:', isOwner);
+
         let noteRef;
 
         if (isOwner) {
           noteRef = doc(db, `users/${user.uid}/notes/${selectedNote.id}`);
+          console.log('Owner note ref path:', `users/${user.uid}/notes/${selectedNote.id}`);
         } else {
           // For shared notes, find the owner from sharedNotes
           const sharedNote = sharedNotes.find(n => n.id === selectedNote.id);
           if (!sharedNote) {
-            console.error('Shared note not found in sharedNotes');
+            console.error('Shared note not found in sharedNotes. sharedNotes:', sharedNotes);
             return;
           }
           noteRef = doc(db, `users/${sharedNote.ownerId}/notes/${selectedNote.id}`);
+          console.log('Shared note ref path:', `users/${sharedNote.ownerId}/notes/${selectedNote.id}`);
         }
 
         setSyncStatus('syncing');
@@ -93,21 +98,25 @@ function AppContent() {
           noteRef,
           (snapshot) => {
             if (snapshot.exists()) {
-              console.log('Real-time update received:', snapshot.data());
+              console.log('Real-time update received! Data:', snapshot.data());
               setSelectedNote(prev => ({
                 ...prev,
                 ...snapshot.data(),
                 id: snapshot.id
               }));
               setSyncStatus('synced');
+            } else {
+              console.warn('Snapshot does not exist');
             }
           },
           (error) => {
             console.error('Real-time sync error:', error);
             setSyncStatus('error');
-            toast.error('Real-time sync error');
+            toast.error('Real-time sync error: ' + error.message);
           }
         );
+        
+        console.log('Listener set up successfully');
       } catch (error) {
         console.error('Failed to set up listener:', error);
         setSyncStatus('error');
@@ -118,6 +127,7 @@ function AppContent() {
 
     return () => {
       if (unsubscribeRef.current) {
+        console.log('Cleaning up listener');
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
