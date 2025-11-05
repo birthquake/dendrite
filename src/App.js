@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from './firebase';
 import { 
   collection, 
@@ -12,6 +12,7 @@ import {
   setDoc,
   getDoc,
   arrayUnion,
+  onSnapshot,
 } from 'firebase/firestore';
 import './styles/theme-variables.css';
 import './App.css';
@@ -31,6 +32,7 @@ function AppContent() {
   const [sharedNotes, setSharedNotes] = useState([]);
   const [noteShares, setNoteShares] = useState({});
   const [selectedNote, setSelectedNote] = useState(null);
+  const [syncStatus, setSyncStatus] = useState('synced'); // 'synced', 'syncing', 'error'
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list');
@@ -42,6 +44,7 @@ function AppContent() {
   });
   const toast = useToast();
   const { user, logout } = useAuth();
+  const unsubscribeRef = useRef(null);
 
   useEffect(() => {
     const initApp = async () => {
@@ -56,6 +59,58 @@ function AppContent() {
     };
     initApp();
   }, [user, toast]);
+
+  // Set up real-time listener for selected note
+  useEffect(() => {
+    if (!selectedNote) {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+      return;
+    }
+
+    const isOwner = notes.some(n => n.id === selectedNote.id);
+    const noteRef = isOwner
+      ? doc(db, `users/${user.uid}/notes/${selectedNote.id}`)
+      : (() => {
+          const sharedNote = sharedNotes.find(n => n.id === selectedNote.id);
+          return doc(db, `users/${sharedNote.ownerId}/notes/${selectedNote.id}`);
+        })();
+
+    try {
+      setSyncStatus('syncing');
+      
+      unsubscribeRef.current = onSnapshot(
+        noteRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            setSelectedNote(prev => ({
+              ...prev,
+              ...snapshot.data(),
+              id: snapshot.id
+            }));
+            setSyncStatus('synced');
+          }
+        },
+        (error) => {
+          console.error('Real-time sync error:', error);
+          setSyncStatus('error');
+          toast.error('Real-time sync error');
+        }
+      );
+    } catch (error) {
+      console.error('Failed to set up listener:', error);
+      setSyncStatus('error');
+    }
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [selectedNote?.id, notes, sharedNotes, user.uid, toast]);
 
   const loadNotes = async () => {
     try {
@@ -592,6 +647,7 @@ function AppContent() {
                   permission={getUserPermission(selectedNote.id)}
                   currentShares={noteShares[selectedNote.id] || []}
                   currentUserEmail={user.email}
+                  syncStatus={syncStatus}
                 />
               ) : (
                 <NoteEditor 
