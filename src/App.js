@@ -438,6 +438,10 @@ function AppContent() {
       });
       
       await loadNotes();
+      // Always reload shared notes to ensure sidebar timestamps update across all browsers
+      // This fixes a Safari rendering quirk where sidebar doesn't update without explicit state change
+      await loadSharedNotes();
+      
       if (!silent) {
         toast.success('Note saved successfully!');
       }
