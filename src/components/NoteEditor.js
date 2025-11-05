@@ -63,24 +63,24 @@ export function NoteEditor({
   }, [note, isCreatingNewNote, getBacklinks]);
 
   // Auto-save while editing
-  useEffect(() => {
-    if (isEditing && note) {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        onSave(note.id, title, content, linkedNotes, tags);
-        setLastSaved(new Date());
-      }, 2000);
+useEffect(() => {
+  if (isEditing && note) {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [content, title, tags, isEditing, note, linkedNotes, onSave]);
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      onSave(note.id, title, content, linkedNotes, tags);
+      setLastSaved(new Date());
+    }, 2000);
+  }
+
+  return () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+  };
+}, [content, title, tags, isEditing, note, linkedNotes]);
 
   // Listen for save keyboard shortcut
   useEffect(() => {
