@@ -26,6 +26,7 @@ export function NoteEditor({
   permission,
   currentShares,
   currentUserEmail,
+  syncStatus,
 }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -254,6 +255,33 @@ export function NoteEditor({
     });
   };
 
+  const getSyncStatusIndicator = () => {
+    switch (syncStatus) {
+      case 'syncing':
+        return (
+          <div className="sync-indicator syncing" title="Syncing changes...">
+            <span className="sync-dot"></span>
+            <span className="sync-label">Syncing</span>
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="sync-indicator error" title="Sync error - changes may not be synced">
+            <span className="sync-dot"></span>
+            <span className="sync-label">Error</span>
+          </div>
+        );
+      case 'synced':
+      default:
+        return (
+          <div className="sync-indicator synced" title="All changes synced">
+            <span className="sync-dot"></span>
+            <span className="sync-label">Synced</span>
+          </div>
+        );
+    }
+  };
+
   const canEdit = permission !== 'view' && permission !== null;
   const canDelete = isOwner;
   const canShare = isOwner;
@@ -276,13 +304,17 @@ export function NoteEditor({
         />
 
         <div className="note-editor-header">
-          <div className="note-editor-actions">
+          <div className="note-editor-header-left">
+            {syncStatus && getSyncStatusIndicator()}
+            
             {permission && permission !== 'admin' && (
               <div className="note-permission-indicator">
                 <PermissionBadge permission={permission} size="md" />
               </div>
             )}
-            
+          </div>
+
+          <div className="note-editor-actions">
             {canEdit && (
               <button
                 className="icon-button icon-button-edit"
@@ -410,6 +442,10 @@ export function NoteEditor({
     return (
       <div className="note-editor">
         <div className="note-editor-header">
+          <div className="note-editor-header-left">
+            {syncStatus && !isCreatingNewNote && getSyncStatusIndicator()}
+          </div>
+
           <div className="note-editor-actions">
             <button
               className="icon-button icon-button-save"
