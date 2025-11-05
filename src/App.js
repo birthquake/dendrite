@@ -110,7 +110,7 @@ function AppContent() {
         unsubscribeRef.current = null;
       }
     };
-  }, [selectedNote?.id, notes, sharedNotes, user.uid, toast]);
+  }, [selectedNote?.id, user.uid]);
 
   const loadNotes = async () => {
     try {
@@ -422,7 +422,6 @@ function AppContent() {
       });
       
       await loadNotes();
-      await loadSharedNotes();
       toast.success('Note saved successfully!');
     } catch (error) {
       toast.error('Failed to save note');
