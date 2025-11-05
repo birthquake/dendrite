@@ -62,7 +62,7 @@ function AppContent() {
 
   // Set up real-time listener for selected note
   useEffect(() => {
-    if (!selectedNote) {
+    if (!selectedNote || !selectedNote.id) {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
@@ -70,39 +70,51 @@ function AppContent() {
       return;
     }
 
-    const isOwner = notes.some(n => n.id === selectedNote.id);
-    const noteRef = isOwner
-      ? doc(db, `users/${user.uid}/notes/${selectedNote.id}`)
-      : (() => {
-          const sharedNote = sharedNotes.find(n => n.id === selectedNote.id);
-          return doc(db, `users/${sharedNote.ownerId}/notes/${selectedNote.id}`);
-        })();
+    const setupListener = async () => {
+      try {
+        const isOwner = notes.some(n => n.id === selectedNote.id);
+        let noteRef;
 
-    try {
-      setSyncStatus('syncing');
-      
-      unsubscribeRef.current = onSnapshot(
-        noteRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            setSelectedNote(prev => ({
-              ...prev,
-              ...snapshot.data(),
-              id: snapshot.id
-            }));
-            setSyncStatus('synced');
+        if (isOwner) {
+          noteRef = doc(db, `users/${user.uid}/notes/${selectedNote.id}`);
+        } else {
+          // For shared notes, find the owner from sharedNotes
+          const sharedNote = sharedNotes.find(n => n.id === selectedNote.id);
+          if (!sharedNote) {
+            console.error('Shared note not found in sharedNotes');
+            return;
           }
-        },
-        (error) => {
-          console.error('Real-time sync error:', error);
-          setSyncStatus('error');
-          toast.error('Real-time sync error');
+          noteRef = doc(db, `users/${sharedNote.ownerId}/notes/${selectedNote.id}`);
         }
-      );
-    } catch (error) {
-      console.error('Failed to set up listener:', error);
-      setSyncStatus('error');
-    }
+
+        setSyncStatus('syncing');
+        
+        unsubscribeRef.current = onSnapshot(
+          noteRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              console.log('Real-time update received:', snapshot.data());
+              setSelectedNote(prev => ({
+                ...prev,
+                ...snapshot.data(),
+                id: snapshot.id
+              }));
+              setSyncStatus('synced');
+            }
+          },
+          (error) => {
+            console.error('Real-time sync error:', error);
+            setSyncStatus('error');
+            toast.error('Real-time sync error');
+          }
+        );
+      } catch (error) {
+        console.error('Failed to set up listener:', error);
+        setSyncStatus('error');
+      }
+    };
+
+    setupListener();
 
     return () => {
       if (unsubscribeRef.current) {
@@ -110,7 +122,7 @@ function AppContent() {
         unsubscribeRef.current = null;
       }
     };
-  }, [selectedNote?.id, user.uid]);
+  }, [selectedNote?.id, user.uid, notes, sharedNotes]);
 
   const loadNotes = async () => {
     try {
@@ -395,12 +407,14 @@ function AppContent() {
     }
   };
 
-  const updateNote = async (noteId, title, content, linkedNotes = [], tags = []) => {
+  const updateNote = async (noteId, title, content, linkedNotes = [], tags = [], silent = false) => {
     try {
       const permission = getUserPermission(noteId);
       
       if (permission === 'view') {
-        toast.error('You do not have permission to edit this note');
+        if (!silent) {
+          toast.error('You do not have permission to edit this note');
+        }
         return;
       }
 
@@ -422,9 +436,13 @@ function AppContent() {
       });
       
       await loadNotes();
-      toast.success('Note saved successfully!');
+      if (!silent) {
+        toast.success('Note saved successfully!');
+      }
     } catch (error) {
-      toast.error('Failed to save note');
+      if (!silent) {
+        toast.error('Failed to save note');
+      }
     }
   };
 
