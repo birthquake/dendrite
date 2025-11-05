@@ -44,23 +44,28 @@ export function NoteEditor({
   const autoSaveTimeoutRef = useRef(null);
 
   // Initialize form with note data
-  useEffect(() => {
-    if (note) {
-      setTitle(note.title);
-      setContent(note.content);
-      setTags(note.tags || []);
-      setLinkedNotes(note.linkedNotes || []);
-      setBacklinks(getBacklinks(note.id));
+useEffect(() => {
+  if (note) {
+    // Update content from real-time changes, but don't close editor if we're actively editing
+    setTitle(note.title);
+    setContent(note.content);
+    setTags(note.tags || []);
+    setLinkedNotes(note.linkedNotes || []);
+    setBacklinks(getBacklinks(note.id));
+    
+    // Only close editor if we just switched to viewing this note (not during editing)
+    if (!isEditing) {
       setIsEditing(false);
-    } else if (isCreatingNewNote) {
-      setTitle('');
-      setContent('');
-      setTags([]);
-      setLinkedNotes([]);
-      setBacklinks([]);
-      setIsEditing(true);
     }
-  }, [note, isCreatingNewNote, getBacklinks]);
+  } else if (isCreatingNewNote) {
+    setTitle('');
+    setContent('');
+    setTags([]);
+    setLinkedNotes([]);
+    setBacklinks([]);
+    setIsEditing(true);
+  }
+}, [note, isCreatingNewNote, getBacklinks]);
 
   // Auto-save while editing - silently saves without closing editor
   useEffect(() => {
