@@ -79,7 +79,6 @@ function AppContent() {
         if (isOwner) {
           noteRef = doc(db, `users/${user.uid}/notes/${selectedNote.id}`);
         } else {
-          // For shared notes, find the owner from sharedNotes
           const sharedNote = sharedNotes.find(n => n.id === selectedNote.id);
           if (!sharedNote) {
             return;
@@ -101,13 +100,18 @@ function AppContent() {
                 ...prev,
                 ...updatedData
               }));
+              
+              // Also update in sharedNotes for sidebar to update in real-time
+              setSharedNotes(prev => prev.map(n => 
+                n.id === snapshot.id ? { ...n, ...updatedData } : n
+              ));
+              
               setSyncStatus('synced');
             }
           },
           (error) => {
             console.error('Real-time sync error:', error);
             setSyncStatus('error');
-            toast.error('Real-time sync error: ' + error.message);
           }
         );
       } catch (error) {
@@ -124,7 +128,7 @@ function AppContent() {
         unsubscribeRef.current = null;
       }
     };
-  }, [selectedNote?.id, user.uid, notes, sharedNotes, toast]);
+  }, [selectedNote?.id, user.uid, notes, sharedNotes]);
 
   const loadNotes = async () => {
     try {
@@ -438,9 +442,6 @@ function AppContent() {
       });
       
       await loadNotes();
-      // Always reload shared notes to ensure sidebar timestamps update across all browsers
-      // This fixes a Safari rendering quirk where sidebar doesn't update without explicit state change
-      await loadSharedNotes();
       
       if (!silent) {
         toast.success('Note saved successfully!');
